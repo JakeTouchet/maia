@@ -18,19 +18,15 @@ import random
 import warnings
 warnings.filterwarnings('ignore')
 
-sys.path.append('./synthetic-neurons-dataset/Grounded-Segment-Anything/')
-
 # Grounding DINO
-import GroundingDINO
-from GroundingDINO import groundingdino as groundingdino
-import GroundingDINO.groundingdino.datasets.transforms as T
-from GroundingDINO.groundingdino.models import build_model
-from GroundingDINO.groundingdino.util import box_ops
-from GroundingDINO.groundingdino.util.slconfig import SLConfig
-from GroundingDINO.groundingdino.util.utils import clean_state_dict, get_phrases_from_posmap
+from Grounded_Segment_Anything.GroundingDINO import groundingdino as groundingdino
+import Grounded_Segment_Anything.GroundingDINO.groundingdino.datasets.transforms as T
+from Grounded_Segment_Anything.GroundingDINO.groundingdino.models import build_model
+from Grounded_Segment_Anything.GroundingDINO.groundingdino.util.slconfig import SLConfig
+from Grounded_Segment_Anything.GroundingDINO.groundingdino.util.utils import clean_state_dict, get_phrases_from_posmap
 
 # segment anything
-from segment_anything import (
+from Grounded_Segment_Anything.segment_anything import (
     sam_model_registry,
     SamPredictor
 )
@@ -39,7 +35,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class SAMNeuron():
-    def __init__(self, labels, mode, pathe2sam = './synthetic-neurons-dataset/Grounded-Segment-Anything/'):
+    def __init__(self, labels, mode, pathe2sam = './synthetic_neurons_dataset/Grounded_Segment_Anything/'):
         config_file = pathe2sam + "GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py"
         grounded_checkpoint =  pathe2sam + "groundingdino_swint_ogc.pth"
         sam_version = "vit_h"

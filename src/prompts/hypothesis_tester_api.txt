@@ -1,0 +1,280 @@
+class System:
+    """
+    A Python class for interfacing with specified units within vision models.
+    
+    Attributes
+    ----------
+    units : List[Unit]
+        A list of units, each containing the model name, layer name, and neuron number.
+    unit : Unit
+        The current unit being analyzed.
+    model_wrapper : ModelInfoWrapper
+        The model wrapper for the current unit.
+    model_dict : Dict[str, ModelInfoWrapper]
+        A dictionary of model names and their corresponding ModelInfoWrapper objects.
+    device : torch.device
+        The device (CPU/GPU) used for computations.
+    threshold : int
+        The current activation threshold for neuron analysis.
+    thresholds : Dict
+        A dictionary containing the threshold values for each unit.
+    
+    Methods
+    -------
+    TESING:
+    call_units(self, image_list: List[torch.Tensor], unit_ids:List[int])->List[List[Tuple[float, str]]]]]
+        Primary function for testing how units respond to images via its
+        activation values and areas of interest.
+    """
+
+    def __init__(self, unit_dict: Dict[str, Dict[str, List[int]]], thresholds: Dict, device: Union[int, str]):
+        """
+        Initializes a system for interfacing with a set of specified units.
+        Parameters
+        -------
+        unit_dict : dict
+            {
+            model_name: {
+                    layer_name: neuron_list
+                    }
+            }
+        thesholds : dict
+            Contains the threshold values for each unit
+        device : str
+            The computational device ('cpu' or 'cuda').
+        """
+
+    def call_units(self, image_list: List[torch.Tensor], unit_ids:List[int])->List[List[Tuple[float, str]]]:
+        """
+        For each specified unit, returns the unit’s maximum activation value
+        (in int format) for each image. Also returns masked images that
+        highlight the regions of the image where the activations are highest
+        (encoded into a Base64 string).
+    
+        Note
+        ----
+        When performing an experiment on multiple units, pass them togethers as a list, 
+        instead of one-by-one
+        
+        Parameters
+        ----------
+        image_list : List[torch.Tensor]
+            The input image
+        unit_ids : List[int]
+            The unit ids to retrieve activations for.
+        
+        Returns
+        -------
+        List[List[Tuple[float, str]]]
+            For each unit, stores the maximum activations and masked images as a
+            list of tuples.       
+
+        Examples
+        --------
+        >>> # Test the activation value of a single unit for a prompt
+        >>> prompt = ["a man eating a gargantuan sandwich"]
+        >>> images = tools.text2image(prompt)
+        >>> activation, masked_image = system.call_units(images, [0])[0][0]
+        >>> tools.display(activation, masked_image)
+        >>>
+        >>> # Test the activation value of multiple units for the prompt "a dog standing on the grass"
+        >>> prompt = ["a dog standing on the grass"]
+        >>> images = tools.text2image(prompt)
+        >>> unit_ids = [0, 1]  # Example unit IDs to test
+        >>> unit_data = system.call_units(images, unit_ids)
+        >>> for unit_datum in unit_data:
+        >>>     activation, masked_image = unit_datum[0]
+        >>>     tools.display(activation, masked_image)
+        >>>
+        >>> # Test the activation value of multiple units for multiple prompts
+        >>> prompt_list = ["a fox and a rabbit watch a movie under a starry night sky",
+        >>>                "a fox and a bear watch a movie under a starry night sky",
+        >>>                "a fox and a rabbit watch a movie at sunrise"]
+        >>> images = tools.text2image(prompt_list)
+        >>> unit_ids = [0, 1]  # Example unit IDs to test
+        >>> unit_data = system.call_units(images, unit_ids)
+        >>> for i, image in enumerate(images):
+        >>>     tools.display(f"Image {i}:", image)
+        >>>     for j, unit_datum in enumerate(unit_data):
+        >>>         tools.display(f"unit {j}")
+        >>>         activation, masked_image = unit_datum[i]
+        >>>         tools.display(activation, masked_image)
+        """
+
+class Tools:
+    """
+    A Python class containing tools to interact with the units implemented in the system class, 
+    in order to run experiments on it.
+
+    Attributes
+    ----------
+    text2image_model_name : str
+        The name of the text-to-image model.
+    text2image_model : any
+        The loaded text-to-image model.
+    images_per_prompt : int
+        Number of images to generate per prompt.
+    path2save : str
+        Path for saving output images.
+    threshold : any
+        Activation threshold for neuron analysis.
+    device : torch.device
+        The device (CPU/GPU) used for computations.
+    experiment_log: str
+        A log of all the experiments, including the code and the output from the neuron
+        analysis.
+    exemplars : Dict
+        A dictionary containing the exemplar images for each unit.
+    exemplars_activations : Dict
+        A dictionary containing the activations for each exemplar image.
+    exemplars_thresholds : Dict
+        A dictionary containing the threshold values for each unit.
+    results_list : List
+        A list of the results from the neuron analysis.
+
+    Methods
+    -------
+    TESTING:
+    text2image(prompt_list: str) -> Tuple[torch.Tensor]
+        Gets a list of text prompts as an input and generates an image for each
+        prompt using a text to image model. The function returns a
+        list of images.
+    edit_images(prompt_list_org_image : List[str], editing_prompts : List[str]) -> Tuple[List[Image.Image], List[str]]
+        This function enables loclized testing of specific hypotheses about how
+        variations on the content of a single image affect neuron activations.
+        Gets a list of input prompt and a list of corresponding editing
+        instructions, then generate images according to the input prompts and
+        edits each image based on the instructions given in the prompt using a
+        text-based image editing model. This function is very useful for testing
+        the causality of the neuron in a controlled way, for example by testing
+        how the neuron activation is affected by changing one aspect of the
+        image. IMPORTANT: Do not use negative terminology such as "remove ...",
+        try to use terminology like "replace ... with ..." or "change the color
+        of ... to ...".
+    display(self, *args: Union[str, Image.Image]):
+        This function is your way of displaying experiment data. You must call
+        this on results/variables that you wish to view.     
+
+    def __init__(self, path2save: str, device: str, DatasetExemplars: DatasetExemplars = None, images_per_prompt=10, text2image_model_name='sd'):
+        """
+        Initializes the Tools object.
+
+        Parameters
+        ----------
+        path2save : str
+            Path for saving output images.
+        device : str
+            The computational device ('cpu' or 'cuda').
+        DatasetExemplars : object
+            an object from the class DatasetExemplars
+        images_per_prompt : int
+            Number of images to generate per prompt.
+        text2image_model_name : str
+            The name of the text-to-image model.
+        """
+
+    def text2image(self, prompt_list: List[str]) -> List[Image.Image]:
+        """
+        Takes a list of text prompts and generates an image for each using a
+        text to image model. The function returns a list of images.
+
+        Parameters
+        ----------
+        prompt_list : List[str]
+            A list of text prompts for image generation.
+
+        Returns
+        -------
+        List[Image.Image]
+            A list of images, corresponding to each of the input prompts. 
+
+
+        Examples
+        --------
+        >>> # Generate images from a list of prompts
+        >>>     prompt_list = [“a toothbrush on mars”, 
+        >>>                     “a toothbrush on venus”,
+        >>>                     “a toothbrush on pluto”]
+        >>>     images = tools.text2image(prompt_list)
+        >>>     tools.display(*images)
+        """
+
+    def edit_images(self, image_prompts : List[str], editing_prompts : List[str]):
+        """
+        Generate images from a list of prompts, then edits each image with the
+        corresponding editing prompt. The function returns a
+        list of images and list of the relevant prompts.
+
+        Parameters
+        ----------
+        image_prompts : List[str]
+            A list of input ptompts to generate images according to, these
+            imagsrc/prompts/api.txtes are to be edited by the prompts in editing_prompts.
+        editing_prompts : List[str]
+            A list of instructions for how to edit the images in image_list.
+            Should be the same length as image_list.
+
+        Returns
+        -------
+        List[Image.Image], List[str]
+            A list of images and a list of all the prompts that
+            were used in the experiment, in the same order as the images
+
+        Examples
+        --------
+        >>> # test the units on the prompt "a dog standing on the grass" and
+        >>> # on the same image but with a cat instead of a dog
+        >>> prompt = ["a dog standing on the grass"]
+        >>> edits = ["replace the dog with a cat"]
+        >>> all_images, all_prompts = tools.edit_images(prompt, edits)
+        >>> unit_ids = [0, 1]
+        >>> unit_data = system.call_units(all_images, unit_ids)
+        >>>
+        >>> for i in range(len(all_images)):
+        >>>     tools.display(all_images[i], all_prompts[i])
+        >>>     for j in range(len(unit_data)):
+        >>>         activations, masked_images = unit_data[j]
+        >>>         tools.display(f"unit {j} masked image: ", masked_images[i])
+        >>>         tools.display(f"unit {j} activation: ", activations[i])
+        >>> 
+        >>> # test the activation value of unit 1 for the prompt "a dog standing on the grass"
+        >>> # for the same image but with a different action instead of "standing":
+        >>> prompts = ["a dog standing on the grass"]*3
+        >>> edits = ["make the dog sit","make the dog run","make the dog eat"]
+        >>> all_images, all_prompts = tools.edit_images(prompts, edits)
+        >>> unit_data = system.call_units(all_images, [1])
+        >>> activations, masked_images = unit_data[0]
+        >>> for i in range(len(all_images)):
+        >>>     tools.display(all_images[i], all_prompts[i])
+        >>>     tools.display(f"unit 1 masked image: ", masked_images[i])
+        >>>     tools.display(f"unit 1 activation: ", activations[i])
+        """
+
+    def display(self, *args: Union[str, Image.Image]):
+        """
+        Displays a series of images and/or text in the chat, similar to a Jupyter notebook.
+        
+        Parameters
+        ----------
+        *args : Union[str, Image.Image]
+            The content to be displayed in the chat. Can be multiple strings or Image objects.
+        """
+
+        Notes
+        -------
+        Displays directly to chat interface.
+
+        Example
+        -------
+        >>> # Display a single image
+        >>> prompt = ["a dog standing on the grass"]
+        >>> images = tools.text2image(prompt)
+        >>> tools.display(*images)
+        >>>
+        >>> # Display a list of images
+        >>> prompt_list = ["A green creature",
+        >>>                 "A red creature",
+        >>>                 "A blue creature"]
+        >>> images = tools.text2image(prompt_list)
+        >>> tools.display(*images)
+        """
