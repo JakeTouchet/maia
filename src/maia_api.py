@@ -6,8 +6,7 @@ from io import BytesIO
 from typing import Dict, List, Tuple, Union, Iterable
 
 # Third-party imports
-from openai import OpenAI
-client = OpenAI()
+import openai
 import requests
 import torch
 import torch.nn.functional as F
@@ -60,7 +59,7 @@ class System:
         (encoded into a Base64 string).
 
     """
-    def __init__(self, unit_dict: Dict[str, Dict[str, List[int]]], thresholds: Dict, device: Union[int, str]):
+    def __init__(self, model_name: str, layer: str, neuron_num: int, thresholds: Dict, device: Union[int, str]):
         """
         Initializes a system for interfacing with a set of specified units.
         Parameters
@@ -76,16 +75,16 @@ class System:
         device : str
             The computational device ('cpu' or 'cuda').
         """
-        self.units = self._enumerate_unit_dict(unit_dict)
         self.device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu") 
-        self.thresholds = thresholds
-        # Loads and stores preprocessing info for each model being experimented with
-        # WARNING - Memory intensive for several/large models
-        model_names = unit_dict.keys()
-        self.model_dict = {model_name: ModelInfoWrapper(model_name, device) for model_name in model_names}
-
+        # Loads and stores preprocessing info for the model being experimented with
+        self.model_wrapper = ModelInfoWrapper(model_name, device)
         # Select first unit as current unit
-        self._select_unit(0)
+        self.unit = Unit(model_name, layer, neuron_num)
+
+        if thresholds:
+            self.threshold = thresholds[self.unit.model_name][self.unit.layer][self.unit.neuron_num]
+        else:
+            self.threshold = 0
 
     def call_neuron(self, image_list: List[torch.Tensor])->Tuple[List[float], List[str]]:
         """
@@ -159,26 +158,6 @@ class System:
             masked_images.append(masked_image)
 
         return activations, masked_images
-
-    def _enumerate_unit_dict(self, unit_dict: Dict[str, Dict[str, List[int]]]) -> List[Unit]:
-        '''Stores the unit dictionary as a list of Unit objects.'''
-        unit_list = []
-        for model_name, layers in unit_dict.items():
-            for layer, neurons in layers.items():
-                for neuron_num in neurons:
-                    unit_list.append(Unit(model_name=model_name, layer=layer, neuron_num=neuron_num))
-        return unit_list
-
-    def _select_unit(self, unit_id: int):
-        """
-        Change the unit System is pointed to. Also loads the model and threshold for the unit.
-        """
-        self.unit = self.units[unit_id]
-        self.model_wrapper = self.model_dict[self.unit.model_name]
-        if self.thresholds:
-            self.threshold = self.thresholds[self.unit.model_name][self.unit.layer][self.unit.neuron_num]
-        else:
-            self.threshold = 0
 
     @staticmethod
     def _spatialize_vit_mlp(hiddens: torch.Tensor) -> torch.Tensor:
@@ -555,6 +534,7 @@ class Tools:
             return hypothesis_tester.experiment_log[-1]['content'][0]['text']
 
 
+    # TODO - Rework
     def edit_images(self, image_prompts : List[str], editing_prompts : List[str]):
         """
         Generate images from a list of prompts, then edits each image with the
@@ -661,8 +641,7 @@ class Tools:
         return image_list
 
 
-    # TODO - Revert
-    def summarize_images(self, image_list: List[str], debug: bool = False) -> str:
+    def summarize_images(self, image_list: List[str]) -> str:
         """
         Gets a list of images and describes what is common to all of them, focusing specifically on unmasked regions.
 
@@ -693,34 +672,14 @@ class Tools:
         >>> tools.display("All exemplars summarization: ", summarization)
         """
         instructions = '''
-        What do all the unmasked regions of these images have in common? There might be more then one common concept, 
-        or a few groups of images with different common concept each. 
-        
-        For on or more groups, consider the following concepts:
-        - Objects
-        - Colors
-        - Textures
-        - Shapes
-        - Patterns
+        What do all the unmasked regions of these images have in common? There
+        might be more then one common concept, or a few groups of images with
+        different common concept each. In these cases return all of the
+        concepts.. 
+        Return your description in the following format: 
 
-        If a category seems irrelevant, disregard it.
-
-        Examples:
-        ---
         [COMMON]:
-            - Objects: "snakes"
-            - Colors: "red"
-            - Patterns: "stripes, dots"
-        ---
-        [COMMON-1]:
-            - Shapes: "vertical lines"
-            - Patterns: "high contrast"
-        [COMMON-2]:
-            - Objects: "poles"
-            - Colors: "light grey"
-        ---
-
-        Your response:
+        <your description>.
         '''
         history = [{'role':'system', 'content':'You are a helpful assistant who views/compares partially or fully masked images.'}]
         user_content = [{"type":"text", "text": instructions}]

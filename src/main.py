@@ -63,21 +63,21 @@ def main(args):
             debug=args.debug
         )
         net_dissect = DatasetExemplars(args.path2exemplars, args.n_exemplars, args.path2save, unit_config)
-        system = System(unit_config, net_dissect.thresholds, args.device)
-        tools = Tools(path2save, 
-                      args.device, 
-                      maia, 
-                      system, 
-                      net_dissect, 
-                      images_per_prompt=args.images_per_prompt, 
-                      text2image_model_name=args.text2image, 
-                      image2text_model_name=args.maia)
 
         # Loop through all defined units
-        for i in len(system.units):
-            system._select_unit(i)
+        for model, layer in unit_config.items():
+            for neuron_num in unit_config[model][layer]:
+                system = System(model, layer, neuron_num, net_dissect.thresholds, args.device)
+                tools = Tools(path2save, 
+                            args.device, 
+                            maia, 
+                            system, 
+                            net_dissect, 
+                            images_per_prompt=args.images_per_prompt, 
+                            text2image_model_name=args.text2image, 
+                            image2text_model_name=args.maia)
 
-            maia.run_experiment(system, tools, save_html=True)
+                maia.run_experiment(system, tools, save_html=True)
         
         # Save the dialogue
         with open(os.path.join(path2save, "experiment_log.json"), "w") as f:
