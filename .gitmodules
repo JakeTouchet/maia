@@ -1,3 +1,6 @@
 [submodule "synthetic-neurons-dataset/Grounded-Segment-Anything"]
 	path = synthetic-neurons-dataset/Grounded-Segment-Anything
 	url = https://github.com/IDEA-Research/Grounded-Segment-Anything.git
+[submodule "src/synthetic_neurons_dataset/Grounded_Segment_Anything"]
+	path = src/synthetic_neurons_dataset/Grounded_Segment_Anything
+	url = https://github.com/IDEA-Research/Grounded-Segment-Anything.git
