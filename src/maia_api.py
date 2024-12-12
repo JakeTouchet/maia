@@ -24,7 +24,7 @@ from utils.call_agent import ask_agent
 from utils.api_utils import is_base64, format_api_content, generate_masked_image, image2str, str2image, Unit, ModelInfoWrapper
 from utils.DatasetExemplars import DatasetExemplars
 from utils.main_utils import generate_numbered_path
-from utils.CodeAgent import InterpAgent
+from utils.InterpAgent import InterpAgent
 from synthetic_neurons_dataset import synthetic_neurons
 
 

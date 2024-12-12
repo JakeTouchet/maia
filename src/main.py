@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath('VisDiff'))
 from maia_api import System, Tools
 from utils.DatasetExemplars import DatasetExemplars
 from utils.main_utils import load_unit_config, generate_save_path, create_unit_config
-from utils.CodeAgent import InterpAgent
+from utils.InterpAgent import InterpAgent
 
 random.seed(0000)
 
