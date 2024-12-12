@@ -7,7 +7,6 @@ from typing import Dict, List, Tuple, Union, Iterable
 
 # Third-party imports
 import openai
-import requests
 import torch
 import torch.nn.functional as F
 from baukit import Trace
@@ -25,7 +24,7 @@ from utils.call_agent import ask_agent
 from utils.api_utils import is_base64, format_api_content, generate_masked_image, image2str, str2image, Unit, ModelInfoWrapper
 from utils.DatasetExemplars import DatasetExemplars
 from utils.main_utils import generate_numbered_path
-from utils.CodeAgent import CodeAgent
+from utils.CodeAgent import InterpAgent
 from synthetic_neurons_dataset import synthetic_neurons
 
 
@@ -380,7 +379,7 @@ class Tools:
                 self, 
                 path2save: str, 
                 device: str,  
-                agent: CodeAgent,
+                agent: InterpAgent,
                 system: System,
                 DatasetExemplars: DatasetExemplars = None, 
                 images_per_prompt=10, 
@@ -468,73 +467,7 @@ class Tools:
 
         return activation_list, image_list
     
-    def test_hypothesis(self, hypothesis: str, activations_context: str, debug=False) -> Union[str, List[Dict]]:
-        """
-        Inputs a hypothesis and runs causal experiments to label it
-        valid or invalid.
-
-        Parameters
-        ----------
-        hypothesis : str
-            The hypothesis to test.
-        activations_context : str
-            Information to provide context for the scale of the
-            top activation values of relevant units. This should contain
-            the top activation values for each unit and labels signifying
-            such.
-        debug : bool
-            If True, returns the experiment log. If False, returns the final
-            experiment log entry.
-
-        Returns
-        -------
-        Union[str, List[Dict]]
-            The final experiment log entry if debug is False, otherwise the
-            full experiment log.
-
-        Example
-        -------
-        >>> # Test a hypothesis for unit 1,
-        >>> exemplar_data = tools.dataset_exemplars([1], system)
-        >>> activations = [activation for activation, _ in exemplar_data[0]]
-        >>> hypothesis = "Unit 1 specifically responds to images of cats, particularly small, orange cats."
-        >>> activations_context = f"Top 15 activations: {activations}"
-        >>> result = tools.test_hypothesis(hypothesis, activations_context)
-        >>> tools.display(result)
-        >>>
-        >>> # Test a hypothesis for multiple units
-        >>> exemplar_data = tools.dataset_exemplars([0, 1], system)
-        >>> activations_0 = [activation for activation, _ in exemplar_data[0]]
-        >>> activations_1 = [activation for activation, _ in exemplar_data[1]]
-        >>> hypothesis = "Unit 0 responds to the color orange, while unit 1 responds to oranges."
-        >>> activations_context = f"Unit 0 activations: {activations_0}, Unit 1 activations: {activations_1}"
-        >>> result = tools.test_hypothesis(hypothesis, activations_context)
-        >>> tools.display(result)
-        """
-
-        hypothesis_tester = CodeAgent(
-            model_name=self.image2text_model_name,
-            prompt_path='./prompts/',
-            api_prompt_name='hypothesis_tester_api.txt',
-            user_prompt_name='hypothesis_tester.txt',
-            overload_prompt_name='final.txt',
-            end_experiment_token='[RESULT]',
-            max_round_count=10,
-            debug=debug
-        )
-        hypothesis_tester.update_experiment_log(role='user', 
-                                                type="text", 
-                                                type_content=f"[CONTEXT]: {activations_context}\n[HYPOTHESIS]: {hypothesis}\n")
-        hypothesis_tester.run_experiment(self.system, self, save_html=debug)
-
-        if debug:
-            return hypothesis_tester.experiment_log
-        else:
-            # Get response string from last experiment log entry
-            return hypothesis_tester.experiment_log[-1]['content'][0]['text']
-
-
-    # TODO - Rework
+    # TODO - Rework, look at editing tools
     def edit_images(self, image_prompts : List[str], editing_prompts : List[str]):
         """
         Generate images from a list of prompts, then edits each image with the

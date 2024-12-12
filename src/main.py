@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath('VisDiff'))
 from maia_api import System, Tools
 from utils.DatasetExemplars import DatasetExemplars
 from utils.main_utils import load_unit_config, generate_save_path, create_unit_config
-from utils.CodeAgent import CodeAgent
+from utils.CodeAgent import InterpAgent
 
 random.seed(0000)
 
@@ -52,7 +52,7 @@ def main(args):
         path2save = generate_save_path(args.path2save, args.maia, unit_config_name)
         os.makedirs(path2save, exist_ok=True)
 
-        maia = CodeAgent(
+        maia = InterpAgent(
             model_name=args.maia,
             prompt_path=args.path2prompts,
             api_prompt_name="api.txt",

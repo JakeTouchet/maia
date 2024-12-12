@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from utils.call_agent import ask_agent
 from utils.ExperimentEnvironment import ExperimentEnvironment
 
-class CodeAgent:
+class InterpAgent:
     """Agent that can execute code defined in an api txt file."""
 
     def __init__(
