@@ -22,7 +22,7 @@ def ask_agent(model, history):
     count = 0
     try:
         count += 1
-        if model in ['gpt-4-vision-preview', 'gpt-4-turbo', 'gpt-4o']:
+        if model in ['gpt-4-vision-preview', 'gpt-4-turbo', 'gpt-4o', 'gpt-4o-mini']:
             params = {
                 "model": model,
                 "messages": history,

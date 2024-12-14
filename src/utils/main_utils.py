@@ -45,21 +45,9 @@ def overload_instructions(tools, prompt_path='./prompts/'):
         final_instructions = file.read()
         tools.update_experiment_log(role='user', type="text", type_content=final_instructions)
 
-
 def load_unit_config(unit_file_name):
     with open(os.path.join("neuron_indices", unit_file_name)) as json_file:
         unit_config = json.load(json_file)
-    return unit_config
-
-def create_unit_config(model1: str, model2: str, layer_name: str, neuron: int):
-    unit_config = {
-        model1: {
-            layer_name: [neuron]
-        },
-        model2: {
-            layer_name: [neuron]
-        }
-    }
     return unit_config
 
 def generate_save_path(path2save: str, maia: str, unit_file_name: str):

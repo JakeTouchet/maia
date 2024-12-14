@@ -104,7 +104,7 @@ class Tools:
 
     Methods
     -------
-    dataset_exemplars(system: System)->List[Tuple[int, str]]
+    dataset_exemplars()->Tuple[List[float], List[str]]
         This experiment provides good coverage of the behavior observed on a
         very large dataset of images and therefore represents the typical
         behavior of the neuron on real images. This function characterizes the
@@ -137,7 +137,7 @@ class Tools:
         description of the semantic content of each of them.
         The function is blind to the current hypotheses list and
         therefore provides an unbiased description of the visual content.
-    display(self, *args: Union[str, Image.Image]):
+    def display(self, *args: Union[str, Image.Image, Iterable]):
         This function is your way of displaying experiment data. You must call
         this on results/variables that you wish to view in order to view them.     
 
@@ -159,30 +159,23 @@ class Tools:
             The name of the text-to-image model.
         """
 
-    def dataset_exemplars(self, system: System) -> List[Tuple[float, str]]
+    def dataset_exemplars(self) -> Tuple[List[float], List[str]]
         """
         This method finds images from the ImageNet dataset that produce the highest activation values for a specific neuron.
         It returns both the activation values and the corresponding exemplar images that were used to generate these activations.
         This experiment is performed on real images and will provide a good approximation of the neuron behavior.
-        
-        Parameters
-        ----------
-        system : System
-            The system representing the specific neuron and layer within the neural network.
-            The system should have 'layer' and 'neuron_num' attributes, so the dataset_exemplars function 
-            can return the exemplar activations and images for that specific neuron.
 
         Returns
         -------
-        List
-            For each exemplar image, stores a tuple containing two elements:
-            - The first element is the activation value for the specified neuron.
-            - The second element is the exemplar images (as Base64 encoded strings) corresponding to the activation.
+        List[float]
+            The activations for each exemplar
+        List[str]
+            The masked images for each exemplars
 
 
         Example
         -------
-        >>> activations, images = tools.dataset_exemplars(system)
+        >>> activations, images = tools.dataset_exemplars()
         >>> for activation, image in zip(activations, images):
         >>>     tools.display(image, f"Activation: {activation}")
         
@@ -256,15 +249,15 @@ class Tools:
         >>>     tools.display(image, f"Activation: {activation}")
         """
 
-    def display(self, *args: Union[str, Image.Image]):
+    def display(self, *args: Union[str, Image.Image, Iterable]):
         """
         Displays a series of images and/or text in the chat, similar to a Jupyter notebook.
         
         Parameters
         ----------
-        *args : Union[str, Image.Image]
+        *args : Union[str, Image.Image, Iterable]
             The content to be displayed in the chat. Can be multiple strings or Image objects.
-        """
+
 
         Notes
         -------
@@ -307,7 +300,7 @@ class Tools:
         Example
         -------
         >>> # Summarize a neuron's dataset exemplars
-        >>> exemplars = [exemplar for _, exemplar in tools.dataset_exemplars(system)] # Get exemplars
+        >>> exemplars = [exemplar for _, exemplar in tools.dataset_exemplars()] # Get exemplars
         >>> summarization = tools.summarize_images(exemplars)
         >>> tools.display(summarization)
         """

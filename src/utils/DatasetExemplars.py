@@ -6,6 +6,7 @@ from collections import defaultdict
 from typing import Dict, List
 
 
+# TODO - os join all paths
 class DatasetExemplars():
     """
     A class for performing network dissection on a given neural network model.
@@ -123,6 +124,7 @@ class DatasetExemplars():
         
         all_masked_images = []
         
+        # Loop through each unit, determined by index in the activations csv
         for unit in range(activations.shape[0]):
             curr_masked_list = []
             
@@ -157,3 +159,96 @@ class DatasetExemplars():
             all_masked_images.append(curr_masked_list)
         
         return all_masked_images, activations[:, :self.n_exemplars], thresholds
+
+class SyntheticExemplars:
+    """
+    A class for analyzing synthetic exemplars in neural networks.
+    
+    This class processes and stores synthetic exemplar images along with their
+    activations and thresholds, organizing them in a nested dictionary structure
+    similar to DatasetExemplars.
+
+    Attributes
+    ----------
+    path2exemplars : str
+        Path to the directory containing the exemplar images.
+    path2save : str
+        Path to the directory where the results will be saved.
+    mode : str
+        The mode of synthetic exemplar generation.
+    n_exemplars : int
+        Number of exemplar images to use for each unit.
+    im_size : int
+        Size to which the images will be resized.
+    exemplars : defaultdict
+        Nested dictionary storing exemplar images: mode->layer->unit.
+    activations : defaultdict
+        Nested dictionary storing unit activations: mode->layer->unit.
+    thresholds : defaultdict
+        Nested dictionary storing unit thresholds: mode->layer->unit.
+    """
+    
+    def __init__(self, path2exemplars: str, path2save: str, mode: str, n_exemplars: int = 15, im_size: int = 224):
+        """
+        Initialize the SyntheticExemplars object.
+
+        Parameters
+        ----------
+        path2exemplars : str
+            Path to the directory containing the exemplar images.
+        path2save : str
+            Path to the directory where the results will be saved.
+        mode : str
+            The mode of synthetic exemplar generation.
+        n_exemplars : int, optional
+            Number of exemplar images to use for each unit (default is 15).
+        im_size : int, optional
+            Size to which the images will be resized (default is 224).
+        """
+        self.path2exemplars = path2exemplars
+        self.n_exemplars = n_exemplars
+        self.path2save = path2save
+        self.im_size = im_size
+        self.mode = mode
+
+        # Initialize nested defaultdict structures
+        self.exemplars = defaultdict(lambda: defaultdict(dict))
+        self.activations = defaultdict(lambda: defaultdict(dict))
+        self.thresholds = defaultdict(lambda: defaultdict(dict))
+
+        # Process the exemplars
+        exemplars, activations = self.net_dissect()
+        
+        # Store results in nested structure
+        self.exemplars["synthetic"][mode] = exemplars
+        self.activations["synthetic"][mode] = activations
+
+
+    def net_dissect(self,im_size=224):
+        exp_path = f'{self.path2exemplars}/{self.mode}'
+        activations = np.loadtxt(f'{exp_path}/activations.csv', delimiter=',')
+        image_array = np.load(f'{exp_path}/images.npy')
+        mask_array = np.load(f'{exp_path}/masks.npy')
+        all_images = []
+        for unit in range(activations.shape[0]):
+            curr_image_list = []
+            for exemplar_inx in range(min(activations.shape[1],self.n_exemplars)):
+                save_path = os.path.join(self.path2save,'synthetic_exemplars',self.mode,str(unit))
+                if os.path.exists(os.path.join(save_path,f'{exemplar_inx}.png')):
+                    with open(os.path.join(save_path,f'{exemplar_inx}.png'), "rb") as image_file:
+                        masked_image = base64.b64encode(image_file.read()).decode('utf-8')
+                    curr_image_list.append(masked_image)
+                else:
+                    curr_mask = (mask_array[unit,exemplar_inx]/255)+0.25
+                    curr_mask[curr_mask>1]=1
+                    curr_image = image_array[unit,exemplar_inx]
+                    masked_image = curr_image * curr_mask
+                    masked_image =  Image.fromarray(masked_image.astype(np.uint8))
+                    os.makedirs(save_path,exist_ok=True)
+                    masked_image.save(os.path.join(save_path,f'{exemplar_inx}.png'), format='PNG')
+                    with open(os.path.join(save_path,f'{exemplar_inx}.png'), "rb") as image_file:
+                        masked_image = base64.b64encode(image_file.read()).decode('utf-8')
+                    curr_image_list.append(masked_image)
+            all_images.append(curr_image_list)
+
+        return all_images, activations[:,:self.n_exemplars]

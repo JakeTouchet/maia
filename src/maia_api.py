@@ -14,7 +14,7 @@ from diffusers import (
     AutoPipelineForText2Image,
     EulerAncestralDiscreteScheduler,
     StableDiffusionInstructPix2PixPipeline,
-    StableDiffusionPipeline,
+    StableDiffusionPipeline
 )
 from PIL import Image
 import numpy as np
@@ -78,7 +78,7 @@ class System:
         # Loads and stores preprocessing info for the model being experimented with
         self.model_wrapper = ModelInfoWrapper(model_name, device)
         # Select first unit as current unit
-        self.unit = Unit(model_name, layer, neuron_num)
+        self.unit = Unit(model_name=model_name, layer=layer, neuron_num=neuron_num)
 
         if thresholds:
             self.threshold = thresholds[self.unit.model_name][self.unit.layer][self.unit.neuron_num]
@@ -238,7 +238,7 @@ class System:
         activation = round(activation, 4)
         return activation.item(), image
 
-class Synthetic_System:
+class SyntheticSystem:
     """
     A Python class containing the vision model and the specific neuron to interact with.
     
@@ -422,7 +422,7 @@ class Tools:
         self.p2p_model = self._load_pix2pix_model(model_name=self.p2p_model_name) # consider maybe adding options for other models like pix2pix zero
         self.html_path = generate_numbered_path(os.path.join(path2save, "experiment"), ".html")
 
-    def dataset_exemplars(self)->List[List[Tuple[float, str]]]:
+    def dataset_exemplars(self)->Tuple[List[float], List[str]]:
         """
         Retrieves the activations and exemplar images the specified units.
 
@@ -523,7 +523,7 @@ class Tools:
         image_list = []
         # Generate list of images from prompts
         for prompt in image_prompts:
-            image_list.append(self._prompt2image(prompt, images_per_prompt=1))
+            image_list.append(self._prompt2image(prompt, images_per_prompt=1)[0])
         # Filter out None values
         image_list = [item for item in image_list if item is not None]
         # If image is None, remove corresponding editing instruction
@@ -680,14 +680,14 @@ class Tools:
         description_list = ''
         instructions = "Do not describe the full image. Please describe ONLY the unmasked regions in this image (e.g. the regions that are not darkened). Be as concise as possible. Return your description in the following format: [highlighted regions]: <your concise description>"
         time.sleep(60)
-        for ind,image in enumerate(image_list):
+        for ind, image in enumerate(image_list):
             history = [{'role':'system', 
                         'content':'you are an helpful assistant'},
                         {'role': 'user', 
                          'content': 
                          [format_api_content("text", instructions),
                            format_api_content("image_url", image)]}]
-            description = ask_agent(self.image2text_model_name,history)
+            description = ask_agent(self.image2text_model_name, history)
             if isinstance(description, Exception): return description_list
             description = description.split("[highlighted regions]:")[-1]
             description = " ".join([f'"{image_title[ind]}", highlighted regions:',description])
@@ -798,8 +798,8 @@ class Tools:
         """
         if model_name == "sd":
             device = self.device
-            model_id = "stabilityai/stable-diffusion-3.5-medium"
-            sdpipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16)
+            model_id = "runwayml/stable-diffusion-v1-5"
+            sdpipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.bfloat16)
             sdpipe = sdpipe.to(device)
 
             # Set progress bar to quiet mode to not clog error output.
@@ -845,7 +845,7 @@ class Tools:
                 except Exception as e:
                     raise(e)
         images = [im.resize((self.im_size, self.im_size)) for im in images]
-        return [image2str(im) for im in images]
+        return images
 
     def generate_html(self, experiment_log: List[Dict], name="experiment", line_length=100):
         # Generates an HTML file with the experiment log.

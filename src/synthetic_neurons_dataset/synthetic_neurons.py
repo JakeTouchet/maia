@@ -19,14 +19,14 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # Grounding DINO
-from Grounded_Segment_Anything.GroundingDINO import groundingdino as groundingdino
-import Grounded_Segment_Anything.GroundingDINO.groundingdino.datasets.transforms as T
-from Grounded_Segment_Anything.GroundingDINO.groundingdino.models import build_model
-from Grounded_Segment_Anything.GroundingDINO.groundingdino.util.slconfig import SLConfig
-from Grounded_Segment_Anything.GroundingDINO.groundingdino.util.utils import clean_state_dict, get_phrases_from_posmap
+from .Grounded_Segment_Anything.GroundingDINO import groundingdino as groundingdino
+from .Grounded_Segment_Anything.GroundingDINO.groundingdino.datasets import transforms as T
+from .Grounded_Segment_Anything.GroundingDINO.groundingdino.models import build_model
+from .Grounded_Segment_Anything.GroundingDINO.groundingdino.util.slconfig import SLConfig
+from .Grounded_Segment_Anything.GroundingDINO.groundingdino.util.utils import clean_state_dict, get_phrases_from_posmap
 
 # segment anything
-from Grounded_Segment_Anything.segment_anything import (
+from .Grounded_Segment_Anything.segment_anything.segment_anything import (
     sam_model_registry,
     SamPredictor
 )
