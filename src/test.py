@@ -107,7 +107,6 @@ def main(args):
                         )
                         with open(os.path.join('./synthetic_neurons_dataset', "labels", f'{layer}.json'), 'r') as file:
                             synthetic_neuron_data = json.load(file)
-                            embed()
                             gt_label = synthetic_neuron_data[neuron_num]["label"].rsplit('_')
                         system = SyntheticSystem(neuron_num, gt_label, layer, args.device)
                     else:

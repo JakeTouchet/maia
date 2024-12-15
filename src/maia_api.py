@@ -269,12 +269,12 @@ class SyntheticSystem:
     """
     def __init__(self, neuron_num: int, neuron_labels: str, neuron_mode: str, device: str):
         
-        self.neuron_num = neuron_num
         self.neuron_labels = neuron_labels
         self.neuron = synthetic_neurons.SAMNeuron(neuron_labels, neuron_mode)
         self.device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")       
         self.threshold = 0
-        self.layer = neuron_mode
+
+        self.unit = Unit(model_name="synthetic", layer=neuron_mode, neuron_num=neuron_num)
 
 
     def call_neuron(self, image_list: List[torch.Tensor])->Tuple[List[int], List[str]]:
@@ -310,16 +310,23 @@ class SyntheticSystem:
         """
         activation_list = []
         masked_images_list = []
-        for image in image_list:
-            if  image==None: #for dalle
-                activation_list.append(None)
-                masked_images_list.append(None)
+        for images in image_list:
+            if images==None: #for dalle
+                activation_list.append([])
+                masked_images_list.append([])
             else:
-                acts, _, _, masks = self.neuron.calc_activations(image)    
-                ind = np.argmax(acts)
-                masked_image = image2str(masks[ind], "./temp_synthetic.png")
-                activation_list.append(acts[ind])
-                masked_images_list.append(masked_image)
+                if type(images) == list:
+                    images = [str2image(image) for image in images]
+                else:
+                    images = [str2image(images)]
+                acts, _, _, masked_images = self.neuron.calc_activations(images)
+                masks_str = []
+                for masked_image in masked_images:
+                    masked_image = image2str(masked_image)
+                    masks_str.append(masked_image)
+                activation_list.extend(acts)
+                masked_images_list.extend(masks_str)
+
         return activation_list,masked_images_list
 
 class Tools:

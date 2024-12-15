@@ -25,21 +25,25 @@ class InterpAgent:
         self.debug = debug
         self.experiment_log = []
         self.prompt_path = prompt_path
+        self.api_prompt_name = api_prompt_name
         self.overload_prompt_name = overload_prompt_name
         self.end_experiment_token = end_experiment_token
         self.max_round_count = max_round_count
-
-        # Add the prompts to the experiment log
-        with open(f'{prompt_path}/{api_prompt_name}', 'r') as file:
+    
+    def _init_experiment_log(self):
+        self.experiment_log = []
+        with open(f'{self.prompt_path}/{self.api_prompt_name}', 'r') as file:
             api_prompt = file.read()
             self.update_experiment_log(role='system', type="text", type_content=api_prompt)
-        with open(f'{prompt_path}/{user_prompt_name}', 'r') as file:
+        with open(f'{self.prompt_path}/{self.user_prompt_name}', 'r') as file:
             user_prompt = file.read()
             self.update_experiment_log(role='user', type="text", type_content=user_prompt)
 
     def run_experiment(self, system: System, tools: Tools, save_html=False):
         """Runs the experiment loop. """
 
+        # Make sure experiment log is clean
+        self._init_experiment_log()
         experiment_env = ExperimentEnvironment(system, tools, globals())
         # Set Tools to point to this CodeAgent
         temp_agent, tools.agent = tools.agent, self
