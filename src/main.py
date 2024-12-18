@@ -1,24 +1,20 @@
 import argparse
 import os
-import sys
 import random
 import torch
 
 from maia_api import System, Tools, SyntheticSystem
 from utils.DatasetExemplars import DatasetExemplars, SyntheticExemplars
-from utils.main_utils import load_unit_config, generate_save_path
+from utils.main_utils import load_unit_config, generate_save_path, retrieve_synth_label, str2dict
 from utils.InterpAgent import InterpAgent
-
-import json
 
 random.seed(0000)
 
 def call_argparse():
     parser = argparse.ArgumentParser(description='Process Arguments')	
     parser.add_argument('--maia', type=str, default='gpt-4o', choices=['gpt-4-vision-preview','gpt-4-turbo', 'gpt-4o', 'gpt-4o-mini'], help='maia agent name')	
-    parser.add_argument('--task', type=str, default='neuron_description', help='task to solve, default is unit description')
-    parser.add_argument('--synthetic', action='store_true', help='Runs maia with synthetic neurons', default=False)
-    parser.add_argument('--unit_config_name', type=str, default='test.json', help='name of unit config file defining what units to test')	
+    parser.add_argument('--task', type=str, default='neuron_description', help='task to solve, default is neuron description')
+    parser.add_argument('--unit_config_name', type=str, help='name of unit config file defining what units to test. Leave blank for manual definition')	
     parser.add_argument('--n_exemplars', type=int, default=15, help='number of examplars for initialization')	
     parser.add_argument('--images_per_prompt', type=int, default=1, help='number of images per prompt')	
     parser.add_argument('--path2save', type=str, default='./results', help='a path to save the experiment outputs')	
@@ -28,27 +24,32 @@ def call_argparse():
     parser.add_argument('--text2image', type=str, default='sd', choices=['sd','dalle'], help='name of text2image model')	
     parser.add_argument('--debug', action='store_true', help='debug mode, print dialogues to screen', default=False)
     # Manual Unit Definition
-    parser.add_argument('--model', type=str, default='resnet152', help='name of the first model')
-    parser.add_argument('--layer', type=str, default='layer4', help='layer to interpret')
-    parser.add_argument('--neurons', nargs='+', type=int, help='list of neurons to interpret')
+    parser.add_argument('--model', type=str, default='resnet152', help='name of the model')
+    parser.add_argument('--units', type=str2dict, default='layer4=122', help='units to interp')
     return parser.parse_args()
 
 def main(args):
-    unit_config = load_unit_config(args.unit_config_name)
-    print(unit_config)
+    path2save = args.path2save
     
-    path2save = generate_save_path(args.path2save, args.maia, args.unit_config_name)
-    os.makedirs(path2save, exist_ok=True)
+    if args.unit_config_name is not None:
+        unit_config = load_unit_config(args.unit_config_name)
+    else:
+        unit_config = {args.model: args.units}
 
-    # TODO - Test maia for mult experiments
+    path2save = generate_save_path(path2save, args.maia, args.unit_config_name or "manual_config")
+    os.makedirs(path2save, exist_ok=True)
+    print("Save path:", path2save)
+    
+    # Initialize MAIA agent
+    print("Initializing MAIA...")
     maia = InterpAgent(
         model_name=args.maia,
         prompt_path=args.path2prompts,
         api_prompt_name="api.txt",
         user_prompt_name=f"user_{args.task}.txt",
         overload_prompt_name="final.txt",
-        end_experiment_token="[FINAL]",
-        max_round_count=25,
+        end_experiment_token="[FINAL]", # IMPORTANT: Make sure matches end-token specified by prompt
+        max_round_count=15,
         debug=args.debug
     )
 
@@ -56,16 +57,13 @@ def main(args):
     for model in unit_config.keys():
         for layer in unit_config[model].keys():
             for neuron_num in unit_config[model][layer]:
-                ## Init System/Exemplars ##############
                 if model == "synthetic":
                     net_dissect = SyntheticExemplars(
                         os.path.join(args.path2exemplars, model),
                         args.path2save,
                         layer
                     )
-                    with open(os.path.join('./synthetic-neurons-dataset/labels/', f'{layer}.json'), 'r') as file:
-                        synthetic_neuron_data = json.load(file)
-                        gt_label = synthetic_neuron_data[str(neuron_num)]["label"].rsplit('_')
+                    gt_label = retrieve_synth_label(layer, neuron_num)
                     system = SyntheticSystem(neuron_num, gt_label, layer, args.device)
                 else:
                     net_dissect = DatasetExemplars(
@@ -75,7 +73,7 @@ def main(args):
                         unit_config
                     )
                     system = System(model, layer, neuron_num, net_dissect.thresholds, args.device)
-                ######################################
+
                 tools = Tools(
                     path2save,
                     args.device,
@@ -87,11 +85,15 @@ def main(args):
                     image2text_model_name=args.maia
                 )
 
-                maia.run_experiment(system, tools, save_html=True)
+            print(f"Running experiment on: {model}, {layer}, {neuron_num}")
+            maia.run_experiment(system, tools, save_html=True)
+            print(f"Completed experiment on: {model}, {layer}, {neuron_num}")
     
-    # Save the dialogue
-    with open(os.path.join(path2save, "experiment_log.json"), "w") as f:
-        f.write(str(maia.experiment_log))
+            # Save the dialogue
+            print("Saving experiment log...")
+            with open(os.path.join(path2save, "experiment_log.json"), "w") as f:
+                f.write(str(maia.experiment_log))
+
 
 if __name__ == '__main__':
     args = call_argparse()

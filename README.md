@@ -63,11 +63,11 @@ export OPENAI_API_KEY='your-api-key-here'
 #### Run MAIA ####
 Manually specify the model and desired units in the format ```layer#1=unit#1,unit#2... : layer#1=unit#1,unit#2...``` by calling e.g.:
 ```bash
-python main.py --model resnet152 --unit_mode manual --units layer3=229,288:layer4=122,210
+python main.py --model resnet152 --units layer3=229,288:layer4=122,210
 ``` 
 OR by loading a ```.json``` file specifying the units (see example in ```./neuron_indices/```)
 ```bash
-python main.py --model resnet152 --unit_mode from_file --unit_file_path ./neuron_indices/
+python main.py --unit_config_name resnset152.json
 ```
 Adding ```--debug``` to the call will print all results to the screen.
 Refer to the documentation of ```main.py``` for more configuration options.

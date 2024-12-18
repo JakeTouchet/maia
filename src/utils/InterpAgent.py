@@ -26,6 +26,7 @@ class InterpAgent:
         self.experiment_log = []
         self.prompt_path = prompt_path
         self.api_prompt_name = api_prompt_name
+        self.user_prompt_name = user_prompt_name
         self.overload_prompt_name = overload_prompt_name
         self.end_experiment_token = end_experiment_token
         self.max_round_count = max_round_count

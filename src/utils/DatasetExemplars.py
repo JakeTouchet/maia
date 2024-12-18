@@ -6,7 +6,6 @@ from collections import defaultdict
 from typing import Dict, List
 
 
-# TODO - os join all paths
 class DatasetExemplars():
     """
     A class for performing network dissection on a given neural network model.
@@ -116,11 +115,11 @@ class DatasetExemplars():
             activations, and thresholds for the specified layer. 
             The images are Base64 encoded strings.
         """
-        exp_path = f'{self.path2exemplars}/{model_name}/imagenet/{layer}'
-        activations = np.loadtxt(f'{exp_path}/activations.csv', delimiter=',')  # units * exemplars
-        thresholds = np.loadtxt(f'{exp_path}/thresholds.csv', delimiter=',')  # units
-        image_array = np.load(f'{exp_path}/images.npy')
-        mask_array = np.load(f'{exp_path}/masks.npy')
+        exp_path = os.path.join(self.path2exemplars, model_name, 'imagenet', layer)
+        activations = np.loadtxt(os.path.join(exp_path, 'activations.csv'), delimiter=',')  # units * exemplars
+        thresholds = np.loadtxt(os.path.join(exp_path, 'thresholds.csv'), delimiter=',')  # units
+        image_array = np.load(os.path.join(exp_path, 'images.npy'))
+        mask_array = np.load(os.path.join(exp_path, 'masks.npy'))
         
         all_masked_images = []
         
@@ -225,10 +224,10 @@ class SyntheticExemplars:
 
 
     def net_dissect(self,im_size=224):
-        exp_path = f'{self.path2exemplars}/{self.mode}'
-        activations = np.loadtxt(f'{exp_path}/activations.csv', delimiter=',')
-        image_array = np.load(f'{exp_path}/images.npy')
-        mask_array = np.load(f'{exp_path}/masks.npy')
+        exp_path = os.path.join(self.path2exemplars, self.mode)
+        activations = np.loadtxt(os.path.join(exp_path, 'activations.csv'), delimiter=',')
+        image_array = np.load(os.path.join(exp_path, 'images.npy'))
+        mask_array = np.load(os.path.join(exp_path, 'masks.npy'))
         all_images = []
         for unit in range(activations.shape[0]):
             curr_image_list = []

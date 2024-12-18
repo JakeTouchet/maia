@@ -475,7 +475,7 @@ class Tools:
         return activation_list, image_list
     
     # TODO - Rework, look at editing tools
-    def edit_images(self, image_prompts : List[str], editing_prompts : List[str]):
+    def edit_images(self, images: Union[List[Image.Image], List[str]], prompts: List[str]):
         """
         Generate images from a list of prompts, then edits each image with the
         corresponding editing prompt. Important note: Do not use negative
@@ -497,58 +497,14 @@ class Tools:
         List[Image.Image], List[str]
             A list of images and a list of all the prompts that
             were used in the experiment, in the same order as the images
-
-        Examples
-        --------
-        >>> # test the units on the prompt "a dog standing on the grass" and
-        >>> # on the same image but with a cat instead of a dog
-        >>> prompt = ["a dog standing on the grass"]
-        >>> edits = ["replace the dog with a cat"]
-        >>> all_images, all_prompts = tools.edit_images(prompt, edits)
-        >>> unit_ids = [0, 1]
-        >>> unit_data = system.call_units(all_images, unit_ids)
-        >>>
-        >>> for i in range(len(all_images)):
-        >>>     tools.display(all_images[i], all_prompts[i])
-        >>>     for j in range(len(unit_data)):
-        >>>         activations, masked_images = unit_data[j]
-        >>>         tools.display(f"unit {j} masked image: ", masked_images[i])
-        >>>         tools.display(f"unit {j} activation: ", activations[i])
-        >>> 
-        >>> # test the activation value of unit 1 for the prompt "a dog standing on the grass"
-        >>> # and for different actions":
-        >>> prompts = ["a dog standing on the grass"]*3
-        >>> edits = ["make the dog sit","make the dog run","make the dog eat"]
-        >>> all_images, all_prompts = tools.edit_images(prompts, edits)
-        >>> unit_data = system.call_units(all_images, [1])
-        >>> activations, masked_images = unit_data[0]
-        >>> for i in range(len(all_images)):
-        >>>     tools.display(all_images[i], all_prompts[i])
-        >>>     tools.display(f"unit 1 masked image: ", masked_images[i])
-        >>>     tools.display(f"unit 1 activation: ", activations[i])
         """
-        image_list = []
-        # Generate list of images from prompts
-        for prompt in image_prompts:
-            image_list.append(self._prompt2image(prompt, images_per_prompt=1)[0])
-        # Filter out None values
-        image_list = [item for item in image_list if item is not None]
-        # If image is None, remove corresponding editing instruction
-        editing_prompts = [item for item, condition in zip(editing_prompts, image_list) if condition is not None]
-        image_prompts = [item for item, condition in zip(image_prompts, image_list) if condition is not None]
 
         # Generate list of edited images from editing instructions
-        edited_images = self.p2p_model(editing_prompts, image_list).images
-        # Merge into one list for both images and prompts
-        all_images= []
-        all_prompt = []
-        for i in range(len(image_prompts)):
-            all_prompt.append(image_prompts[i])
-            all_images.append(image_list[i])
-            all_prompt.append(editing_prompts[i])
-            all_images.append(edited_images[i])
+        # TODO - Assumes one image per prompt, talk to Tamar
+        images = [image[0] for image in images]
+        edited_images = self.p2p_model(prompts, images).images
 
-        return all_images, all_prompt
+        return edited_images
 
     def text2image(self, prompt_list: List[str]) -> List[torch.Tensor]:
         """Gets a list of text prompt as an input, generates an image for each prompt in the list using a text to image model.
@@ -564,19 +520,11 @@ class Tools:
         List[Image.Image]
             A list of images, corresponding to each of the input prompts. 
 
-
-        Examples
-        --------
-        >>> # Generate images from a list of prompts
-        >>>     prompt_list = [“a toilet on mars”, 
-        >>>                     “a toilet on venus”,
-        >>>                     “a toilet on pluto”]
-        >>>     images = tools.text2image(prompt_list)
-        >>>     tools.display(*images)
         """
         image_list = [] 
         for prompt in prompt_list:
             images = self._prompt2image(prompt)
+            # TODO - Concatenates, talk to Tamar
             image_list.append(images)
         return image_list
 
@@ -763,6 +711,7 @@ class Tools:
         else:
             return format_api_content("text", content)
 
+    # TODO - Try stabilityai/stable-diffusion-xl-refiner-1.0
     def _load_pix2pix_model(self, model_name):
         """
         Loads a pix2pix image editing model.
@@ -825,7 +774,6 @@ class Tools:
         else:
             raise("unrecognized text to image model name")
 
-    # TODO - Test
     def _prompt2image(self, prompt, images_per_prompt=None):
         if images_per_prompt == None: 
             images_per_prompt = self.images_per_prompt
@@ -854,6 +802,7 @@ class Tools:
         images = [im.resize((self.im_size, self.im_size)) for im in images]
         return images
 
+    # TODO - Make experiment log more human friendly to view
     def generate_html(self, experiment_log: List[Dict], name="experiment", line_length=100):
         # Generates an HTML file with the experiment log.
         html_string = f'''<html>
@@ -892,8 +841,6 @@ class Tools:
             if entry['role'] == 'assistant':
                 html_string += f"<h2>MAIA</h2>"  
                 text = entry['content'][0]['text']
-                # Wrap text to line_length
-                #text = textwrap.fill(text, line_length)
 
                 html_string += f"<pre>{text}</pre><br>"
                 html_string += f"<h2>Experiment Execution</h2>"  

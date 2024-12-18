@@ -2,6 +2,16 @@
 import os
 import json
 
+# Convert a comma-separated key=value pairs into a dictionary
+def str2dict(arg_value):
+    my_dict = {}
+    if arg_value:
+        for item in arg_value.split(':'):
+            key, value = item.split('=')
+            values = value.split(',')
+            my_dict[key] = [int(v) for v in values]
+    return my_dict
+
 # return the prompt according to the task
 def return_prompt(prompt_path,setting='unit_description'):
     with open(f'{prompt_path}/api.txt', 'r') as file:
@@ -61,3 +71,9 @@ def generate_numbered_path(path:str, file_extension:str=""):
         i += 1
         numbered_path = path + "_" + str(i) + file_extension
     return numbered_path
+
+def retrieve_synth_label(layer, neuron_num):
+    with open(os.path.join('./synthetic_neurons_dataset', "labels", f'{layer}.json'), 'r') as file:
+        synthetic_neuron_data = json.load(file)
+        gt_label = synthetic_neuron_data[neuron_num]["label"].rsplit('_')
+    return gt_label

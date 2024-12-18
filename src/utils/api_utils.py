@@ -81,17 +81,6 @@ class ModelInfoWrapper:
             full_model, preprocess = clip.load(name)
             model = full_model.visual.to(self.device).eval()
             self.preprocess = preprocess
-        # TODO - paths hard coded
-        elif "gelu" in model_name:
-            if model_name == "finetune_resnet_gelu":
-                check_path = "/data/vision/torralba/scratch/adrianr/input_norm/eccv_outputs/finetune_resnet_gelu/2024-02-01_16-32-09/checkpoint-3.pth.tar"
-            elif model_name == "advtrain_resnet_gelu":
-                check_path = "/data/vision/torralba/scratch/adrianr/input_norm/eccv_outputs/advtrain_resnet_gelu/2024-02-01_16-32-09/checkpoint-3.pth.tar"
-            elif model_name == "gradnorm_resnet_gelu":
-                check_path = "/data/vision/torralba/scratch/adrianr/input_norm/eccv_outputs/gradnorm_resnet_gelu/2024-02-03_22-07-28/snapshots/snapshot-49-5003.pth.tar"
-
-            model = timm.models.create_model("resnet50", checkpoint_path=check_path, pretrained=True).to(self.device).eval()
-            self._replace_layers(model, torch.nn.ReLU, torch.nn.GELU)
         
         return model
 
@@ -196,18 +185,15 @@ def image2str(image)->str:
 def str2image(image_str):
     if type(image_str) == Image.Image:
         return image_str
-    #Converts a Base64 encoded string to an image.
+    # Converts a Base64 encoded string to an image.
     img_bytes = base64.b64decode(image_str)
     img_buffer = BytesIO(img_bytes)
     img = Image.open(img_buffer)
     return img
 
-#def generate_gridded_image(images: Union[List[Image.Image], List[str]):
-    
-    
+
 def resize_image(image: Image.Image, size=(256, 256)) -> Image.Image:
     return image.resize(size)
-
 
 def merge_images_horizontally(images: List[Image.Image], gap: int = 10) -> Image.Image:
     imgs = [resize_image(image) for image in images]

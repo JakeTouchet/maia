@@ -166,7 +166,6 @@ def main(args):
             print(f"Error in main initialization (before log file creation):")
             print(traceback.format_exc())
 
-# [Previous test functions remain unchanged]
 def test_call_neuron_single(tools: Tools, system: System):
     """Test call_neuron with a single prompt"""
     prompt = ["a dog standing on the grass"]
@@ -175,40 +174,44 @@ def test_call_neuron_single(tools: Tools, system: System):
     for activation, image in zip(activations, images):
         tools.display(image, f"Activation: {activation}")
 
-def test_call_neuron_with_edit(tools: Tools, system: System):
-    """Test call_neuron with image editing"""
-    prompt = ["a dog standing on the grass"]
-    edits = ["replace the dog with a lion"]
-    all_images, all_prompts = tools.edit_images(prompt, edits)
-    activation_list, image_list = system.call_neuron(all_images)
-    for activation, image in zip(activation_list, image_list):
-        tools.display(image, f"Activation: {activation}")
-
 def test_dataset_exemplars(tools, system):
     """Test dataset_exemplars functionality"""
     activations, images = tools.dataset_exemplars()
     for activation, image in zip(activations, images):
         tools.display(image, f"Activation: {activation}")
 
+def test_call_neuron_with_edit(tools: Tools, system: System):
+    """Test call_neuron with image editing"""
+    prompts = ["a dog standing on the grass"]
+    images = tools.text2image(prompts)
+    edits = ["replace the dog with a lion"]
+    edited_images = tools.edit_images(images, edits) 
+    activation_list, image_list = system.call_neuron(edited_images)
+    for activation, image in zip(activation_list, image_list):
+        tools.display(image, f"Activation: {activation}")
+
 def test_edit_images_dog_cat(tools: Tools, system: System):
     """Test edit_images with dog to cat transformation"""
-    prompt = ["a dog standing on the grass"]
+    prompts = ["a dog standing on the grass"]
+    images = tools.text2image(prompts)
     edits = ["replace the dog with a cat"]
-    all_images, all_prompts = tools.edit_images(prompt, edits)
-    activation_list, image_list = system.call_neuron(all_images)
+    edited_images = tools.edit_images(images, edits) 
+    embed()
+    activation_list, image_list = system.call_neuron(edited_images)
     for activation, image in zip(activation_list, image_list):
         tools.display(image, f"Activation: {activation}")
 
-def test_edit_images_dog_actions(tools, system):
+def test_edit_images_dog_actions(tools: Tools, system: System):
     """Test edit_images with different dog actions"""
     prompts = ["a dog standing on the grass"]*3
+    images = tools.text2image(prompts)
     edits = ["make the dog sit","make the dog run","make the dog eat"]
-    all_images, all_prompts = tools.edit_images(prompts, edits)
-    activation_list, image_list = system.call_neuron(all_images)
+    edited_images = tools.edit_images(images, edits) 
+    activation_list, image_list = system.call_neuron(edited_images)
     for activation, image in zip(activation_list, image_list):
         tools.display(image, f"Activation: {activation}")
 
-def test_text2image(tools, system):
+def test_text2image(tools: Tools, system: System):
     """Test text2image functionality"""
     prompt_list = ["a dog standing on the grass", 
                    "a dog sitting on a couch",
@@ -218,7 +221,7 @@ def test_text2image(tools, system):
     for activation, image in zip(activation_list, image_list):
         tools.display(image, f"Activation: {activation}")
 
-def test_display_single(tools, system):
+def test_display_single(tools: Tools, system: System):
     """Test display with a single image"""
     prompt = ["a dog standing on the grass"]
     images = tools.text2image(prompt)
@@ -226,7 +229,7 @@ def test_display_single(tools, system):
     for activation, image in zip(activation_list, image_list):
         tools.display(image, f"Activation: {activation}")
 
-def test_display_multiple(tools, system):
+def test_display_multiple(tools: Tools, system: System):
     """Test display with multiple images"""
     prompt_list = ["a dog standing on the grass", 
                    "a dog sitting on a couch",
