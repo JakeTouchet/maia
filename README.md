@@ -92,5 +92,9 @@ You can also use the .json file to run all synthetic neurons (or specify your ow
 ```bash
 python main.py --model synthetic_neurons --unit_mode from_file --unit_file_path ./neuron_indices/
 ```
+
+#### Run MAIA on new models or custom synthetic neurons ####
+Refer to [this guide](exemplars.md) on setting up MAIA to work with your own models or synthetic neurons.
+
 ### Acknowledgment ###
 [Christy Li](https://www.linkedin.com/in/christykl/) helped with cleaning up the synthetic neurons code for release.
