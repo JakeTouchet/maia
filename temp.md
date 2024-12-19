@@ -66,10 +66,8 @@ Finally, move the computed exemplars to the `exemplars/` folder.
 - Refactored MAIA’s api file to be purely front-facing, moving back-end functions to various utils files. Public functions that MAIA executes now follow standard OOP naming conventions
 - Re-implemented MAIA as an InterpAgent. The InterpAgent class allows the creation of tools as sub-agents which can execute code given a user and api prompt
 - Added gpt-4o, gpt-4o-mini, and gpt-4-turbo
-- Unified llm calls to use call_agent.py and the same set of response formatting function
 - Changed neuron index file to allow specification of multiple models
 - Simplified main.py
-- Numerous small clean ups and bugfixes
 
 ## TODO
 

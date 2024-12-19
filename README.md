@@ -12,12 +12,23 @@
 MAIA is a system that uses neural models to automate neural model understanding tasks like feature interpretation and failure mode discovery. It equips a pre-trained vision-language model with a set of tools that support iterative experimentation on subcomponents of other models to explain their behavior. These include tools commonly used by human interpretability researchers: for synthesizing and editing inputs, computing maximally activating exemplars from real-world datasets, and summarizing and describing experimental results. Interpretability experiments proposed by MAIA compose these tools to describe and explain system behavior.
 
 **News** 
+[December ?]: Released MAIA.2
 \
 [July 3]: We release MAIA implementation code for neuron labeling 
 \
 [August 14]: Synthetic neurons are now available (both in `demo.ipynb` and in `main.py`)
 
 **This repo is under active development. Sign up for updates by email using [this google form](https://forms.gle/Zs92DHbs3Y3QGjXG6).**
+
+## Updates
+TODO - Turn to checkboxes
+- Reworked MAIA’s code execution to run multiple free-form blocks of code, rather than having MAIA define a single function that is then executed
+- Reworked MAIA to use a flexible display function which recursively unpacks passed iterables and append them to MAIA’s experiment log
+- Refactored MAIA’s api file to be purely front-facing, moving back-end functions to various utils files. Public functions that MAIA executes now follow standard OOP naming conventions
+- Re-implemented MAIA as an InterpAgent. The InterpAgent class allows the creation of tools as sub-agents which can execute code given a user and api prompt
+- Added gpt-4o, gpt-4o-mini, and gpt-4-turbo
+- Changed neuron index file to allow specification of multiple models
+- Simplified main.py
 
 
 ### Installations ###
