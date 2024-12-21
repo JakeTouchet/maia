@@ -5,9 +5,9 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - _libgcc_mutex=0.1=main
-  - _openmp_mutex=5.1=1_gnu
-  - ca-certificates=2024.8.30=hbcca054_0
+  - _libgcc_mutex=0.1=conda_forge
+  - _openmp_mutex=4.5=2_gnu
+  - ca-certificates=2024.12.14=hbcca054_0
   - cuda-cccl=12.2.53=0
   - cuda-command-line-tools=12.2.0=0
   - cuda-compiler=12.2.0=0
@@ -45,6 +45,7 @@ dependencies:
   - cuda-visual-tools=12.2.0=0
   - gds-tools=1.7.0.149=0
   - ld_impl_linux-64=2.38=h1181459_1
+  - libabseil=20240116.2=cxx17_he02047a_1
   - libcublas=12.2.1.16=0
   - libcublas-dev=12.2.1.16=0
   - libcublas-static=12.2.1.16=0
@@ -64,8 +65,9 @@ dependencies:
   - libcusparse-dev=12.1.1.53=0
   - libcusparse-static=12.1.1.53=0
   - libffi=3.4.4=h6a678d5_0
-  - libgcc-ng=11.2.0=h1234567_1
-  - libgomp=11.2.0=h1234567_1
+  - libgcc=14.2.0=h77fa898_1
+  - libgcc-ng=14.2.0=h69a702a_1
+  - libgomp=14.2.0=h77fa898_1
   - libnpp=12.1.1.14=0
   - libnpp-dev=12.1.1.14=0
   - libnpp-static=12.1.1.14=0
@@ -74,14 +76,21 @@ dependencies:
   - libnvjpeg=12.1.1.14=0
   - libnvjpeg-dev=12.1.1.14=0
   - libnvjpeg-static=12.1.1.14=0
-  - libstdcxx-ng=11.2.0=h1234567_1
+  - libprotobuf=4.25.3=he621ea3_0
+  - libsentencepiece=0.2.0=hc656cff_3
+  - libstdcxx=14.2.0=hc0a3c3a_1
+  - libstdcxx-ng=14.2.0=h4852527_1
   - ncurses=6.4=h6a678d5_0
   - nsight-compute=2023.2.0.16=0
-  - openssl=3.0.15=h5eee18b_0
+  - openssl=3.4.0=hb9d3cd8_0
   - pip=23.3.1=py38h06a4308_0
   - python=3.8.18=h955ad1f_0
   - python-dotenv=1.0.1=pyhd8ed1ab_0
+  - python_abi=3.8=2_cp38
   - readline=8.2=h5eee18b_0
+  - sentencepiece=0.2.0=h578d9bd_3
+  - sentencepiece-python=0.2.0=py38hc8955bd_3
+  - sentencepiece-spm=0.2.0=hc656cff_3
   - sqlite=3.41.2=h5eee18b_0
   - tk=8.6.12=h1ccaba5_0
   - wheel=0.41.2=py38h06a4308_0
@@ -317,7 +326,7 @@ dependencies:
       - tifffile==2023.7.10
       - timm==0.4.12
       - tinycss2==1.2.1
-      - tokenizers==0.15.1
+      - tokenizers==0.20.3
       - tomli==2.0.1
       - torch==2.1.2
       - torchgeometry==0.1.2
@@ -325,7 +334,7 @@ dependencies:
       - tornado==6.4
       - tqdm==4.65.2
       - traitlets==5.14.1
-      - transformers==4.37.1
+      - transformers==4.46.3
       - trimesh==4.0.10
       - triton==2.1.0
       - types-python-dateutil==2.8.19.20240106
