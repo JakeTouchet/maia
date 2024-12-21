@@ -111,7 +111,7 @@ class Tools:
         prototypical behavior of the neuron by computing its activation on all
         images in the ImageNet dataset and returning the 15 highest activation
         values and the images that produced them.
-    edit_images(prompt_list_org_image : List[str], editing_prompts : List[str]) -> Tuple[List[str], List[str]]
+    edit_images(self, images: Union[List[Image.Image], List[str]], prompts: List[str]) -> List[Image.Image]
         This function enables loclized testing of specific hypotheses about how
         variations on the content of a single image affect neuron activations.
         Gets a list of input prompt and a list of corresponding editing
@@ -179,26 +179,27 @@ class Tools:
         >>> for activation, image in zip(activations, images):
         >>>     tools.display(image, f"Activation: {activation}")
         
-    def edit_images(self, image_prompts : List[str], editing_prompts : List[str]):
+    def edit_images(self, images: Union[List[Image.Image], List[str]], prompts: List[str]):
         """
         Generate images from a list of prompts, then edits each image with the
-        corresponding editing prompt. The function returns a
+        corresponding editing prompt. Important note: Do not use negative
+        terminology such as "remove ...", try to use terminology like "replace
+        ... with ..." or "change the color of ... to" The function returns a
         list of images and list of the relevant prompts.
 
         Parameters
         ----------
-        image_prompts : List[str]
-            A list of input ptompts to generate images according to, these
-            images are to be edited by the prompts in editing_prompts.
+        images : images: Union[List[Image.Image], List[str]]
+            A list of images to edit
         editing_prompts : List[str]
             A list of instructions for how to edit the images in image_list.
             Should be the same length as image_list.
 
         Returns
         -------
-        List[str], List[str]
-            A list of images in Base64 encoded string format and a list of all the 
-            prompts that were used in the experiment, in the same order as the images
+        List[Image.Image]
+            The list of edited images
+        """
 
         Examples
         --------

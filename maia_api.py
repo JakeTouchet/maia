@@ -473,7 +473,6 @@ class Tools:
 
         return activation_list, image_list
     
-    # TODO - Rework, look at editing tools
     def edit_images(self, images: Union[List[Image.Image], List[str]], prompts: List[str]):
         """
         Generate images from a list of prompts, then edits each image with the
@@ -484,22 +483,19 @@ class Tools:
 
         Parameters
         ----------
-        image_prompts : List[str]
-            A list of input ptompts to generate images according to, these
-            images are to be edited by the prompts in editing_prompts.
+        images : images: Union[List[Image.Image], List[str]]
+            A list of images to edit
         editing_prompts : List[str]
             A list of instructions for how to edit the images in image_list.
             Should be the same length as image_list.
 
         Returns
         -------
-        List[Image.Image], List[str]
-            A list of images and a list of all the prompts that
-            were used in the experiment, in the same order as the images
+        List[Image.Image]
+            The list of edited images
         """
 
         # Generate list of edited images from editing instructions
-        # TODO - Assumes one image per prompt, talk to Tamar
         images = [image[0] for image in images]
         edited_images = self.p2p_model(prompts, images).images
 
@@ -709,7 +705,6 @@ class Tools:
         else:
             return format_api_content("text", content)
 
-    # TODO - Try stabilityai/stable-diffusion-xl-refiner-1.0
     def _load_pix2pix_model(self, model_name):
         """
         Loads a pix2pix image editing model.
