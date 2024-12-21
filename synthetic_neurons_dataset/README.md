@@ -2,38 +2,21 @@
 
 ## To set up the synthetic neurons:
 
-1. **init Grounded-SAM submodule**  
-  ```
-  git submodule init
-  git submodule update
-  ```
 
-2. **Follow the setup instructions on Grounded-SAM setup:**
+1. **Follow the setup instructions on Grounded-SAM setup:**
    - Export global variables (choose whether to run on CPU or GPU; note that running on CPU is feasible but slower, approximately 3 seconds per image):
      ```bash
      export AM_I_DOCKER=False
      export BUILD_WITH_CUDA=True
      export CUDA_HOME=/path/to/cuda-11.3/
-     ```
-   - Install Segment Anything:
-     ```bash
-     python -m pip install -e segment_anything
-     ```
-   - Install Grounding Dino:
-     ```bash
-     python -m pip install -e GroundingDINO
-     ```
-   - Install diffusers:
-     ```bash
-     pip install --upgrade diffusers[torch]
+
      ```
    - Install osx:
      ```bash
-     git submodule update --init --recursive
      cd grounded-sam-osx && bash install.sh
      ```
      
-3. **Download grounded DINO and grounded SAM .pth files**  
+2. **Download grounded DINO and grounded SAM .pth files**  
    - Download groudned DINO: 
      ```bash
      cd .. #back to ./Grounded_Segment-Anything
@@ -58,3 +41,7 @@
         --text_prompt "bear" \
         --device "cpu"
       ```
+  
+### Note
+Initially Grounded Segment Anything was implemented as a git submodule. However, a commit broke synthetic neuron functionality. Therefore, it is now
+simply a hard-copied version of commit 2b1b72e to avoid further commits affecting the repository.

@@ -60,12 +60,15 @@ NEW: `demo.ipynb` now supports synthetic neurons. Follow installation instructio
 ### Batch experimentation ###
 To run a batch of experiments, use ```main.py```:
 
-#### Load openai api key ####
-(in case you don't have an openai api-key, you can get one by following the instructions [here](https://platform.openai.com/docs/quickstart)).
+#### Load openai/huggingface api key ####
+(in case you don't have these api-keys, you can follow the instructions [here](https://platform.openai.com/docs/quickstart) and [here]https://huggingface.co/docs/hub/security-tokens).
 
-Set your api-key as an environment variable (this is a bash command, look [here](https://platform.openai.com/docs/quickstart) for other OS)
+For huggingface, you will need access to stable-diffusion-3.5, which can be obtained [here]https://huggingface.co/stabilityai/stable-diffusion-3.5-medium.
+
+Set your api-keys as an environment variables (this is a bash command, look [here](https://platform.openai.com/docs/quickstart) for other OS)
 ```bash
 export OPENAI_API_KEY='your-api-key-here'
+export HF_TOKEN='your-api-key-here'
 ```
 
 #### Run MAIA ####
@@ -164,8 +167,51 @@ This will run the compute exemplars script using the ResNet18 synthetic model on
 
 Finally, move the computed exemplars to the `exemplars/` folder.
 
-### Creating synthetic neurons ###
-TODO
+### To set up the synthetic neurons:
+
+
+1. **Follow the setup instructions on Grounded-SAM setup:**
+   - Export global variables (choose whether to run on CPU or GPU; note that running on CPU is feasible but slower, approximately 3 seconds per image):
+     ```bash
+     export AM_I_DOCKER=False
+     export BUILD_WITH_CUDA=True
+     export CUDA_HOME=/path/to/cuda-11.3/
+
+     ```
+   - Install osx:
+     ```bash
+     cd grounded-sam-osx && bash install.sh
+     ```
+     
+2. **Download grounded DINO and grounded SAM .pth files**  
+   - Download groudned DINO: 
+     ```bash
+     cd .. #back to ./Grounded_Segment-Anything
+     #download the pretrained groundingdino-swin-tiny model
+     wget https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth
+     ```
+   - Download grounded SAM: 
+     ```bash
+     wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
+     ```
+    - Try running grounded SAM demo:
+      ```bash
+      export CUDA_VISIBLE_DEVICES=0
+      python grounded_sam_demo.py \
+        --config GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py \
+        --grounded_checkpoint groundingdino_swint_ogc.pth \
+        --sam_checkpoint sam_vit_h_4b8939.pth \
+        --input_image assets/demo1.jpg \
+        --output_dir "outputs" \
+        --box_threshold 0.3 \
+        --text_threshold 0.25 \
+        --text_prompt "bear" \
+        --device "cpu"
+      ```
+  
+### Note
+Initially Grounded Segment Anything was implemented as a git submodule. However, a commit broke synthetic neuron functionality. Therefore, it is now
+simply a hard-copied version of commit 2b1b72e to avoid further commits affecting the repository.
 
 ### Acknowledgment ###
 [Christy Li](https://www.linkedin.com/in/christykl/) helped with cleaning up the synthetic neurons code for release.

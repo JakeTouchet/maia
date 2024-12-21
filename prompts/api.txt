@@ -204,19 +204,21 @@ class Tools:
         --------
         # test the units on the prompt "a dog standing on the grass" and
         # on the same image but with a cat instead of a dog
-        >>> prompt = ["a dog standing on the grass"]
-        >>> edits = ["replace the dog with a cat"]
-        >>> all_images, all_prompts = tools.edit_images(prompt, edits)
-        >>> activation_list, image_list = system.call_neuron(all_images)
+        >>> images = tools.text2image(prompts)
+        >>> edits = ["replace the dog with a lion"]
+        >>> edited_images = tools.edit_images(images, edits) 
+        >>> activation_list, image_list = system.call_neuron(edited_images)
         >>> for activation, image in zip(activation_list, image_list):
         >>>     tools.display(image, f"Activation: {activation}")
+
 
         # test the activation value of unit 1 for the prompt "a dog standing on the grass"
         # for the same image but with a different action instead of "standing":
         >>> prompts = ["a dog standing on the grass"]*3
+        >>> images = tools.text2image(prompts)
         >>> edits = ["make the dog sit","make the dog run","make the dog eat"]
-        >>> all_images, all_prompts = tools.edit_images(prompts, edits)
-        >>> activation_list, image_list = system.call_neuron(all_images)
+        >>> edited_images = tools.edit_images(images, edits) 
+        >>> activation_list, image_list = system.call_neuron(edited_images)
         >>> for activation, image in zip(activation_list, image_list):
         >>>     tools.display(image, f"Activation: {activation}")
 

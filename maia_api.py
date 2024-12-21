@@ -14,10 +14,9 @@ from diffusers import (
     AutoPipelineForText2Image,
     EulerAncestralDiscreteScheduler,
     StableDiffusionInstructPix2PixPipeline,
-    StableDiffusionPipeline
+    StableDiffusion3Pipeline
 )
 from PIL import Image
-import numpy as np
 
 # Local imports
 from utils.call_agent import ask_agent
@@ -149,7 +148,7 @@ class System:
                     masked_image = None
                 else:
                     image = self.model_wrapper.preprocess_images(image)
-                    acts,masks = self._calc_activations(image)    
+                    acts, masks = self._calc_activations(image)    
                     ind = torch.argmax(acts).item()
                     activation = acts[ind].item()
                     masked_image = generate_masked_image(image[ind], masks[ind], self.threshold)
@@ -524,7 +523,6 @@ class Tools:
         image_list = [] 
         for prompt in prompt_list:
             images = self._prompt2image(prompt)
-            # TODO - Concatenates, talk to Tamar
             image_list.append(images)
         return image_list
 
@@ -754,8 +752,9 @@ class Tools:
         """
         if model_name == "sd":
             device = self.device
-            model_id = "runwayml/stable-diffusion-v1-5"
-            sdpipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.bfloat16)
+
+            model_id = "stabilityai/stable-diffusion-3.5-medium"
+            sdpipe = StableDiffusion3Pipeline.from_pretrained(model_id, torch_dtype=torch.bfloat16)            
             sdpipe = sdpipe.to(device)
 
             # Set progress bar to quiet mode to not clog error output.
@@ -774,6 +773,7 @@ class Tools:
         else:
             raise("unrecognized text to image model name")
 
+    # TODO - Remove references to images per prompt
     def _prompt2image(self, prompt, images_per_prompt=None):
         if images_per_prompt == None: 
             images_per_prompt = self.images_per_prompt
