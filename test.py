@@ -197,7 +197,6 @@ def test_edit_images_dog_cat(tools: Tools, system: System):
     images = tools.text2image(prompts)
     edits = ["replace the dog with a cat"]
     edited_images = tools.edit_images(images, edits) 
-    embed()
     activation_list, image_list = system.call_neuron(edited_images)
     for activation, image in zip(activation_list, image_list):
         tools.display(image, f"Activation: {activation}")

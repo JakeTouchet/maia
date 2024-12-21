@@ -21,14 +21,11 @@ MAIA is a system that uses neural models to automate neural model understanding 
 **This repo is under active development. Sign up for updates by email using [this google form](https://forms.gle/Zs92DHbs3Y3QGjXG6).**
 
 ## Updates
-TODO - Turn to checkboxes
-- Reworked MAIA’s code execution to run multiple free-form blocks of code, rather than having MAIA define a single function that is then executed
-- Reworked MAIA to use a flexible display function which recursively unpacks passed iterables and append them to MAIA’s experiment log
-- Refactored MAIA’s api file to be purely front-facing, moving back-end functions to various utils files. Public functions that MAIA executes now follow standard OOP naming conventions
-- Re-implemented MAIA as an InterpAgent. The InterpAgent class allows the creation of tools as sub-agents which can execute code given a user and api prompt
-- Added gpt-4o, gpt-4o-mini, and gpt-4-turbo
-- Changed neuron index file to allow specification of multiple models
-- Simplified main.py
+- [x] Rework MAIA’s code execution to run multiple free-form blocks of code, rather than having MAIA define a single function that is then executed.
+- [x] Rework MAIA to use a flexible display function which recursively unpacks passed iterables and append them to MAIA’s experiment log.
+- [x] Refactor MAIA’s api file to be purely front-facing, moving back-end functions to various utils files. Public functions that MAIA executes now follow standard OOP naming conventions. Simplify main.py, utils, and neuron configuration.
+- [x] Re-implement MAIA as an InterpAgent. The InterpAgent class allows the creation of tools as sub-agents which can execute code given a user and api prompt.
+- [x] Add gpt-4o, gpt-4o-mini, and gpt-4-turbo.
 
 
 ### Installations ###
@@ -44,7 +41,7 @@ download [net-dissect](https://netdissect.csail.mit.edu/) precomputed exemplars:
 bash download_exemplars.sh
 ```
 
-### Quick Start ###
+## Quick Start ##
 You can run demo experiments on individual units using ```demo.ipynb```:
 \
 \
@@ -88,6 +85,8 @@ Results are automatically saved to an html file under ```./results/``` and can b
 python -m http.server 80
 ```
 Once the server is up, open the html in [http://localhost:80](http://localhost:80/results/)
+
+## Additional Configuration ##
 
 #### Run MAIA on sythetic neurons ####
 
@@ -164,6 +163,9 @@ python3 -m scripts.compute_exemplars resnet18syn imagenet --device cuda
 This will run the compute exemplars script using the ResNet18 synthetic model on the ImageNet dataset, utilizing CUDA for GPU acceleration.
 
 Finally, move the computed exemplars to the `exemplars/` folder.
+
+### Creating synthetic neurons ###
+TODO
 
 ### Acknowledgment ###
 [Christy Li](https://www.linkedin.com/in/christykl/) helped with cleaning up the synthetic neurons code for release.
