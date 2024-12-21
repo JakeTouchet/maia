@@ -1,9 +1,9 @@
 # Standard library imports
 import math
-import os,sys
+import os
 import time
-from io import BytesIO
 from typing import Dict, List, Tuple, Union, Iterable
+from abc import ABC, abstractmethod
 
 # Third-party imports
 import openai
@@ -26,8 +26,31 @@ from utils.main_utils import generate_numbered_path
 from utils.InterpAgent import InterpAgent
 from synthetic_neurons_dataset import synthetic_neurons
 
+# TODO - Update all documentation
+class BaseSystem(ABC):
+    unit: Unit
 
-class System:
+    @abstractmethod
+    def call_neuron(self, image_list: List[torch.Tensor])->Tuple[List[float], List[str]]:
+        """
+        Returns the unit’s maximum activation value
+        (in int format) for each image. Also returns masked images that
+        highlight the regions of the image where the activations are highest
+        (encoded into a Base64 string).
+        
+        Parameters
+        ----------
+        image_list : List[torch.Tensor]
+            The input image
+        
+        Returns
+        -------
+        Tuple[List[float], List[str]]
+            The maximum activations and respective masked images
+        """
+        pass
+
+class System(BaseSystem):
     """
     A Python class for interfacing with specified units within vision models.
     
@@ -86,7 +109,7 @@ class System:
 
     def call_neuron(self, image_list: List[torch.Tensor])->Tuple[List[float], List[str]]:
         """
-        For each specified unit, returns the unit’s maximum activation value
+        Returns the unit’s maximum activation value
         (in int format) for each image. Also returns masked images that
         highlight the regions of the image where the activations are highest
         (encoded into a Base64 string).
@@ -95,14 +118,11 @@ class System:
         ----------
         image_list : List[torch.Tensor]
             The input image
-        unit_ids : List[int]
-            The unit ids to retrieve activations for.
         
         Returns
         -------
-        List[List[Tuple[float, str]]]
-            For each unit, stores the maximum activations and masked images as a tuple.
-            If only one unit is specified, returns a single tuple.
+        Tuple[List[float], List[str]]
+            The maximum activations and respective masked images
         
         Examples
         --------
@@ -237,7 +257,7 @@ class System:
         activation = round(activation, 4)
         return activation.item(), image
 
-class SyntheticSystem:
+class SyntheticSystem(BaseSystem):
     """
     A Python class containing the vision model and the specific neuron to interact with.
     
