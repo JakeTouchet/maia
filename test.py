@@ -84,10 +84,16 @@ def main(args):
         log_file = setup_error_logging(path2save)
         
         # Initialize MAIA agent
+        api = [
+            (System, [System.call_neuron]),
+            (Tools, [Tools.text2image, Tools.edit_images, Tools.dataset_exemplars, Tools.display, Tools.describe_images, Tools.summarize_images])
+        ]
+        
         maia = InterpAgent(
             model_name=args.maia,
+            api=api,
             prompt_path=args.path2prompts,
-            api_prompt_name="api.txt",
+            api_prompt_name="test_api.txt",
             user_prompt_name=f"user_{args.task}.txt",
             overload_prompt_name="final.txt",
             end_experiment_token="[FINAL]",
