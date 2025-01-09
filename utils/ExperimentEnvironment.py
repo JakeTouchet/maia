@@ -38,7 +38,7 @@ class ExperimentEnvironment:
         
         return maia_code
 
-    # Run the code on python
+    # Run the code in python
     def execute_experiment(self, maia_experiment: str)->str:
         code_blocks = self.get_code(maia_experiment)
 
