@@ -26,6 +26,7 @@ MAIA is a system that uses neural models to automate neural model understanding 
 - [x] Refactor MAIA’s api file to be purely front-facing, moving back-end functions to various utils files. Public functions that MAIA executes now follow standard OOP naming conventions. Simplify main.py, utils, and neuron configuration.
 - [x] Re-implement MAIA as an InterpAgent. The InterpAgent class allows the creation of tools as sub-agents which can execute code given a user and api prompt.
 - [x] Add gpt-4o, gpt-4o-mini, and gpt-4-turbo.
+- [x] Add ability to automatically generate api.txt file from passed functions and classes, removing the need to copy and paste documentation changes
 
 
 ### Installations ###

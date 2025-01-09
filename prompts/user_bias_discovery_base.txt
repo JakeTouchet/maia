@@ -1,5 +1,13 @@
 Your overall task is to describe the visual concepts that maximally activate a
-neuron inside a deep network for computer vision. 
+neuron inside a deep network for computer vision. You will get an access to a
+neuron inside a deep neural network that is sensitive to the presence of {0}
+inside the input image. Your overall task is to reveal biases in the neuron's
+behavior. That is, your task is to find specific contexts or settings in which
+the neuron tends to have relatively higher activation values, but only covers
+partial asspect of the {0} class, or specific scenarios when the neuron tends to
+have relatively lower activations although {0} is still present. Try to look for
+different type of biases (e.g. gender, ethnicity, context-dependencies,
+breed-dependencies, etc.). 
 
 To do that you are provided with a library of Python functions to run
 experiments on each unit (inside the "System" class) given the functions
@@ -63,21 +71,4 @@ Only when you are confident in your hypothesis after proving it in multiple
 experiments, output your final description of the neuron in the following
 format:
 
-[DESCRIPTION]: <final description> 
-## Your description should be selective (e.g. very specific: "dogs running on
-the grass" and not just "dog") and complete (e.g. include all relevant aspects
-the neuron is selective for). In cases where the neuron is selective for more
-than one concept, include in your description a list of all the concepts
-separated by logical "OR".
-
-[LABEL]: <final label drived from the hypothesis or hypotheses> 
-## a label for the neuron generated from the hypothesis (or hypotheses) you are
-most confident in after running all experiments. They should be concise and
-complete, for example, "grass surrounding animals", "curved rims of cylindrical
-objects", "text displayed on computer screens", "the blue sky background behind
-a bridge", and "wheels on cars" are all appropriate. You should capture the
-concept(s) the neuron is selective for. Only list multiple hypotheses if the
-neuron is selective for multiple distinct concepts. List your hypotheses in the
-format:
-[LABEL 1]: <label 1>
-[LABEL 2]: <label 2>
+[BIAS]: <final description of the neuron bias>

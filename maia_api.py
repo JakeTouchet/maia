@@ -52,33 +52,23 @@ class BaseSystem(ABC):
 
 class System(BaseSystem):
     """
-    A Python class for interfacing with specified units within vision models.
+    A Python class containing the vision model and the specific neuron to interact with.
     
     Attributes
     ----------
-    units : List[Unit]
-        A list of units, each containing the model name, layer name, and neuron number.
-    unit : Unit
-        The current unit being analyzed.
-    model_wrapper : ModelInfoWrapper
-        The model wrapper for the current unit.
-    model_dict : Dict[str, ModelInfoWrapper]
-        A dictionary of model names and their corresponding ModelInfoWrapper objects.
-    device : torch.device
-        The device (CPU/GPU) used for computations.
-    threshold : int
-        The current activation threshold for neuron analysis.
-    thresholds : Dict
-        A dictionary containing the threshold values for each unit.
+    neuron_num : int
+        The unit number of the neuron.
+    layer : string
+        The name of the layer where the neuron is located.
+    model_name : string
+        The name of the vision model.
+    model : nn.Module
+        The loaded PyTorch model.
 
     Methods
     -------
-    call_units(self, image_list: List[torch.Tensor], unit_ids:List[int])->List[List[Tuple[float, str]]]]]
-        For each image, returns each unit's maximum activation value
-        (in int format) over that image. Also returns masked images that
-        highlight the regions of the image where the activations are highest
-        (encoded into a Base64 string).
-
+    call_neuron(image_list: List[torch.Tensor]) -> Tuple[List[int], List[str]]
+        Returns the neuron activation for each image in the input image_list as well as the original image (encoded into a Base64 string).
     """
     def __init__(self, model_name: str, layer: str, neuron_num: int, thresholds: Dict, device: Union[int, str]):
         """
@@ -109,10 +99,7 @@ class System(BaseSystem):
 
     def call_neuron(self, image_list: List[torch.Tensor])->Tuple[List[float], List[str]]:
         """
-        Returns the unit’s maximum activation value
-        (in int format) for each image. Also returns masked images that
-        highlight the regions of the image where the activations are highest
-        (encoded into a Base64 string).
+        The function returns the neuron's maximum activation value (in int format) for each of the images in the list as well as the original image (encoded into a Base64 string).
         
         Parameters
         ----------
@@ -121,38 +108,27 @@ class System(BaseSystem):
         
         Returns
         -------
-        Tuple[List[float], List[str]]
-            The maximum activations and respective masked images
+        Tuple[List[int], List[str]]
+            For each image in image_list returns the activation value of the neuron on that image, and the original image encoded into a Base64 string.
+
         
         Examples
         --------
-        >>> # Test the activation value of a single unit for a prompt
-        >>> prompt = ["a man eating a gargantuan sandwich"]
-        >>> images = tools.text2image(prompt)
-        >>> 
-        >>> tools.display(*activations, *masked_image)
-        >>>
-        >>> # Test the activation value of multiple units for the prompt "a dog standing on the grass"
+        # test the activation value of the neuron for the prompt "a dog standing on the grass"
         >>> prompt = ["a dog standing on the grass"]
-        >>> images = tools.text2image(prompt)
-        >>> unit_ids = [0, 1]  # Example unit IDs to test
-        >>> unit_data = system.call_units(images, unit_ids)
-        >>> for activations, masked_images in unit_data:
-        >>>    tools.display(*masked_images, *activations)
-        >>>
-        >>> # Test the activation value of multiple units for multiple prompts
-        >>> prompt_list = ["a fox and a rabbit watch a movie under a starry night sky",
-        >>>                "a fox and a bear watch a movie under a starry night sky",
-        >>>                "a fox and a rabbit watch a movie at sunrise"]
-        >>> images = tools.text2image(prompt_list)
-        >>> unit_ids = [0, 1]  # Example unit IDs to test
-        >>> unit_data = system.call_units(images, unit_ids)
-        >>> for i in range(len(images)):
-        >>>     tools.display(prompt_list[i], images[i])
-        >>>     for j in range(len(unit_data)):
-        >>>         activation, masked_image = unit_data[j][i]
-        >>>         tools.display(f"unit {j}")
-        >>>         tools.display(masked_image, activation)
+        >>> image = tools.text2image(prompt)
+        >>> activations, images = system.call_neuron(image)
+        >>> for activation, image in zip(activations, images):
+        >>>     tools.display(image, f"Activation: {activation}")
+
+        # test the activation value of the neuron for the prompt "a dog standing on the grass" 
+        # and the neuron activation value for the same image but with a lion instead of a dog
+        >>> prompt = ["a dog standing on the grass"]
+        >>> edits = ["replace the dog with a lion"]
+        >>> all_images, all_prompts = tools.edit_images(prompt, edits)
+        >>> activation_list, image_list = system.call_neuron(all_images)
+        >>> for activation, image in zip(activation_list, image_list):
+        >>>     tools.display(image, f"Activation: {activation}")
         """
 
         activations, masked_images = [], []
@@ -298,7 +274,7 @@ class SyntheticSystem(BaseSystem):
 
     def call_neuron(self, image_list: List[torch.Tensor])->Tuple[List[int], List[str]]:
         """
-        The function returns the neuron’s maximum activation value (in int format) over each of the images in the list as well as the activation map of the neuron over each of the images that highlights the regions of the image where the activations are higher (encoded into a Base64 string).
+        The function returns the neuron's maximum activation value (in int format) over each of the images in the list as well as the activation map of the neuron over each of the images that highlights the regions of the image where the activations are higher (encoded into a Base64 string).
         
         Parameters
         ----------
@@ -379,26 +355,44 @@ class Tools:
     results_list : List
         A list of the results from the neuron analysis.
 
-
     Methods
     -------
-    dataset_exemplars(self, unit_ids: List[int], system: System)->List[List[Tuple[float, str]]]:
-        Retrieves the activations and exemplar images for a list of units.
-    edit_images(self, image_prompts : List[Image.Image], editing_prompts : List[str]):
-        Generate images from a list of prompts, then edits each image with the
-        corresponding editing prompt.
-    text2image(self, prompt_list: List[str]) -> List[torch.Tensor]:
-        Gets a list of text prompt as an input, generates an image for each prompt in the list using a text to image model.
-        The function returns a list of images.
-    summarize_images(self, image_list: List[str]) -> str:
-        Gets a list of images and describes what is common to all of them, focusing specifically on unmasked regions.
-    sampler(act: any, imgs: List[any], mask: any, prompt: str, method: str = 'max') -> Tuple[List[int], List[str]]
-        Processes images based on neuron activations.
-    describe_images(self, image_list: List[str], image_title:List[str]) -> str:
-        Generates descriptions for a list of images, focusing specifically on highlighted regions.
-    display(self, *args: Union[str, Image.Image]):
-        Displays a series of images and/or text in the chat, similar to a Jupyter notebook.
-
+    dataset_exemplars()->Tuple[List[float], List[str]]
+        This experiment provides good coverage of the behavior observed on a
+        very large dataset of images and therefore represents the typical
+        behavior of the neuron on real images. This function characterizes the
+        prototypical behavior of the neuron by computing its activation on all
+        images in the ImageNet dataset and returning the 15 highest activation
+        values and the images that produced them.
+    edit_images(self, images: Union[List[Image.Image], List[str]], prompts: List[str]) -> List[Image.Image]
+        This function enables loclized testing of specific hypotheses about how
+        variations on the content of a single image affect neuron activations.
+        Gets a list of input prompt and a list of corresponding editing
+        instructions, then generate images according to the input prompts and
+        edits each image based on the instructions given in the prompt using a
+        text-based image editing model. This function is very useful for testing
+        the causality of the neuron in a controlled way, for example by testing
+        how the neuron activation is affected by changing one aspect of the
+        image. IMPORTANT: Do not use negative terminology such as "remove ...",
+        try to use terminology like "replace ... with ..." or "change the color
+        of ... to ...".
+    text2image(prompt_list: str) -> List[str]
+        Gets a list of text prompts as an input and generates an image for each
+        prompt using a text to image model. The function returns a
+        list of images in Base64 encoded string forma.
+    summarize_images(self, image_list: List[str]) -> str:    
+        This function is useful to summarize the mutual visual concept that
+        appears in a set of images. It gets a list of images at input and
+        describes what is common to all of them.
+    describe_images(synthetic_image_list: List[str], synthetic_image_title:List[str]) -> str
+        Provides impartial descriptions of images. Do not use this function on
+        dataset exemplars. Gets a list of images and generates a textual
+        description of the semantic content of each of them.
+        The function is blind to the current hypotheses list and
+        therefore provides an unbiased description of the visual content.
+    def display(self, *args: Union[str, Image.Image, Iterable]):
+        This function is your way of displaying experiment data. You must call
+        this on results/variables that you wish to view in order to view them.     
     """
 
     def __init__(
@@ -450,41 +444,22 @@ class Tools:
 
     def dataset_exemplars(self)->Tuple[List[float], List[str]]:
         """
-        Retrieves the activations and exemplar images the specified units.
-
-        Parameters
-        ----------
-        unit_ids : Union[List[int], int]
-            Unit ids to retrieve exemplars for.
+        This method finds images from the ImageNet dataset that produce the highest activation values for a specific neuron.
+        It returns both the activation values and the corresponding exemplar images that were used to generate these activations.
+        This experiment is performed on real images and will provide a good approximation of the neuron behavior.
 
         Returns
         -------
-        List[List[Tuple[float, str]]]
-            For each unit, stores the maximum activations and masked images as a tuple.
+        List[float]
+            The activations for each exemplar
+        List[str]
+            The masked images for each exemplars
 
         Example
         -------
-        >>> # Display the exemplars and activations for a list of units
-        >>> unit_ids = [0, 1]
-        >>> exemplar_data = tools.dataset_exemplars(unit_ids, system)
-        >>> for i in range(len(exemplar_data)):
-        >>>     tools.display(f"unit {unit_ids[i]}: ")
-        >>>     for activation, masked_image in exemplar_data[i]:
-        >>>         tools.display(masked_image, activation)
-        >>> # Test each unit on the other's exemplars
-        >>> unit_ids = [0, 1]
-        >>> exemplar_data = tools.dataset_exemplars(unit_ids, system, mask=False)
-        >>> _, exemplars_0 = zip(*exemplar_data[0])
-        >>> _, exemplars_1 = zip(*exemplar_data[1])
-
-        >>> unit_data = []
-        >>> unit_data.append(system.call_units(exemplars_1, [0])[0])
-        >>> unit_data.append(system.call_units(exemplars_0, [1])[0])
-        >>> for i in range(len(unit_data)):
-        >>>     tools.display(f"unit {i}: ")
-        >>>     unit_datum = unit_data[0]
-        >>>     for activation, masked_image in unit_datum:
-        >>>         tools.display(masked_image, activation)
+        >>> activations, images = tools.dataset_exemplars()
+        >>> for activation, image in zip(activations, images):
+        >>>     tools.display(image, f"Activation: {activation}")
         """
         unit = self.system.unit
         image_list = self.exemplars[unit.model_name][unit.layer][unit.neuron_num]
@@ -513,8 +488,28 @@ class Tools:
         -------
         List[Image.Image]
             The list of edited images
-        """
 
+        Examples
+        --------
+        # test the units on the prompt "a dog standing on the grass" and
+        # on the same image but with a cat instead of a dog
+        >>> images = tools.text2image(prompts)
+        >>> edits = ["replace the dog with a lion"]
+        >>> edited_images = tools.edit_images(images, edits) 
+        >>> activation_list, image_list = system.call_neuron(edited_images)
+        >>> for activation, image in zip(activation_list, image_list):
+        >>>     tools.display(image, f"Activation: {activation}")
+
+        # test the activation value of unit 1 for the prompt "a dog standing on the grass"
+        # for the same image but with a different action instead of "standing":
+        >>> prompts = ["a dog standing on the grass"]*3
+        >>> images = tools.text2image(prompts)
+        >>> edits = ["make the dog sit","make the dog run","make the dog eat"]
+        >>> edited_images = tools.edit_images(images, edits) 
+        >>> activation_list, image_list = system.call_neuron(edited_images)
+        >>> for activation, image in zip(activation_list, image_list):
+        >>>     tools.display(image, f"Activation: {activation}")
+        """
         # Generate list of edited images from editing instructions
         images = [image[0] for image in images]
         edited_images = self.p2p_model(prompts, images).images
@@ -522,8 +517,10 @@ class Tools:
         return edited_images
 
     def text2image(self, prompt_list: List[str]) -> List[torch.Tensor]:
-        """Gets a list of text prompt as an input, generates an image for each prompt in the list using a text to image model.
-        The function returns a list of images.
+        """
+        Takes a list of text prompts and generates images_per_prompt images for each using a
+        text to image model. The function returns a list of a list of images_per_prompt images 
+        for each prompt.
 
         Parameters
         ----------
@@ -532,9 +529,19 @@ class Tools:
 
         Returns
         -------
-        List[Image.Image]
-            A list of images, corresponding to each of the input prompts. 
+        List[List[str]]
+            A list of a list of images_per_prompt images in Base64 encoded string format for 
+            each input prompts. 
 
+        Examples
+        --------
+        >>> prompt_list = ["a dog standing on the grass", 
+        >>>                "a dog sitting on a couch",
+        >>>                "a dog running through a field"]
+        >>> images = tools.text2image(prompt_list)
+        >>> activation_list, image_list = system.call_neuron(images)
+        >>> for activation, image in zip(activation_list, image_list):
+        >>>     tools.display(image, f"Activation: {activation}")
         """
         image_list = [] 
         for prompt in prompt_list:
@@ -545,8 +552,7 @@ class Tools:
 
     def summarize_images(self, image_list: List[str]) -> str:
         """
-        Gets a list of images and describes what is common to all of them, focusing specifically on unmasked regions.
-
+        Gets a list of images and describes what is common to all of them.
 
         Parameters
         ----------
@@ -560,18 +566,10 @@ class Tools:
 
         Example
         -------
-        >>> # Summarize a unit's dataset exemplars
-        >>> _, exemplars = tools.dataset_exemplars([0], system)[0] # Get exemplars for unit 0
-        >>> summarization = tools.summarize_images(image_list)
-        >>> tools.display("Unit 0 summarization: ", summarization)
-        >>> 
-        >>> # Summarize what's common amongst two sets of exemplars
-        >>> exemplars_data = tools.dataset_exemplars([0,1], system)
-        >>> all_exemplars = []
-        >>> for _, exemplars in exemplars_data:
-        >>>     all_exemplars += exemplars
-        >>> summarization = tools.summarize_images(all_exemplars)
-        >>> tools.display("All exemplars summarization: ", summarization)
+        >>> # Summarize a neuron's dataset exemplars
+        >>> exemplars = [exemplar for _, exemplar in tools.dataset_exemplars()] # Get exemplars
+        >>> summarization = tools.summarize_images(exemplars)
+        >>> tools.display(summarization)
         """
         instructions = '''
         What do all the unmasked regions of these images have in common? There
@@ -613,14 +611,10 @@ class Tools:
 
     def describe_images(self, image_list: List[str], image_title:List[str]) -> str:
         """
-        Provides impartial description of the highlighted image regions within an image.
-        Generates textual descriptions for a list of images, focusing specifically on highlighted regions.
-        This function translates the visual content of the highlighted region in the image to a text description. 
-        The function operates independently of the current hypothesis list and thus offers an impartial description of the visual content.        
-        It iterates through a list of images, requesting a description for the 
-        highlighted (unmasked) regions in each synthetic image. The final descriptions are concatenated 
-        and returned as a single string, with each description associated with the corresponding 
-        image title.
+        Generates textual descriptions for a list of images, focusing
+        specifically on highlighted regions. The final descriptions are
+        concatenated and returned as a single string, with each description
+        associated with the corresponding image title.
 
         Parameters
         ----------
@@ -638,13 +632,13 @@ class Tools:
 
         Example
         -------
-        >>> prompt_list = [“a man smiling”, 
-                            “a man frowning”,
-                            “a man talking”]
+        >>> prompt_list = ["a dog standing on the grass", 
+        >>>                "a dog sitting on a couch",
+        >>>                "a dog running through a field"]
         >>> images = tools.text2image(prompt_list)
-        >>> activation_list, masked_images = system.units(images, [0])[0]
-        >>> descriptions = tools.describe_images(masked_images, prompt_list)
-        >>> tools.display(*descriptions)
+        >>> activation_list, image_list = system.call_neuron(images)
+        >>> descriptions = tools.describe_images(image_list, prompt_list)
+        >>> tools.display(descriptions)
         """
         description_list = ''
         instructions = "Do not describe the full image. Please describe ONLY the unmasked regions in this image (e.g. the regions that are not darkened). Be as concise as possible. Return your description in the following format: [highlighted regions]: <your concise description>"
@@ -666,7 +660,6 @@ class Tools:
     def display(self, *args: Union[str, Image.Image, Iterable]):
         """
         Displays a series of images and/or text in the chat, similar to a Jupyter notebook.
-        Recursively displays nested iterables.
         
         Parameters
         ----------
@@ -679,17 +672,21 @@ class Tools:
 
         Example
         -------
-        >>> # Display a single image
+        # Display a single image
         >>> prompt = ["a dog standing on the grass"]
         >>> images = tools.text2image(prompt)
-        >>> tools.display(*images)
-        >>>
-        >>> # Display a list of images
-        >>> prompt_list = ["A green creature",
-        >>>                 "A red creature",
-        >>>                 "A blue creature"]
+        >>> activation_list, image_list = system.call_neuron(images)
+        >>> for activation, image in zip(activation_list, image_list):
+        >>>     tools.display(image, f"Activation: {activation}")
+
+        # Display a list of images
+        >>> prompt_list = ["a dog standing on the grass", 
+        >>>                "a dog sitting on a couch",
+        >>>                "a dog running through a field"]
         >>> images = tools.text2image(prompt_list)
-        >>> tools.display(*images)
+        >>> activation_list, image_list = system.call_neuron(images)
+        >>> for activation, image in zip(activation_list, image_list):
+        >>>     tools.display(image, f"Activation: {activation}")
         """
         output = []
         for item in args:
