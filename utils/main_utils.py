@@ -20,6 +20,30 @@ def return_prompt(prompt_path,setting='unit_description'):
         user_prompt = file.read()
     return sysPrompt, user_prompt
 
+def create_bias_prompt(
+        path2indices:str, 
+        path2prompts:str, 
+        unit:str, 
+        base_prompt_name:str="user_bias_discovery_base.txt", 
+        final_prompt_name:str="user_bias_discovery.txt"
+        ):
+    """
+    Creates and saves a bias prompt for a given unit. 
+    Loads the base prompt from user_bias_discovery_base.txt
+    and saves the final prompt to user_bias_discovery.txt.
+    """
+    # Load class index and base prompt
+    with open(os.path.join(path2indices, "imagenet_class_index.json"), 'r') as file:
+        imagenet_classes = json.load(file)
+    with open(os.path.join(path2prompts, base_prompt_name), 'r') as file:
+        base_prompt = file.read()
+    # Create the final prompt
+    prompt = base_prompt.format(imagenet_classes[unit][1].replace("_"," "))
+    # Save the final prompt
+    with open(os.path.join(path2prompts, final_prompt_name), 'w') as file:
+        file.write(prompt)
+    file.close()
+
 # save the field from the history to a file
 def save_field(history, filepath, field_name, first=False, end=True):
     text2save = None
@@ -55,8 +79,8 @@ def overload_instructions(tools, prompt_path='./prompts/'):
         final_instructions = file.read()
         tools.update_experiment_log(role='user', type="text", type_content=final_instructions)
 
-def load_unit_config(unit_file_name):
-    with open(os.path.join("neuron_indices", unit_file_name)) as json_file:
+def load_unit_config(path2indices:str, unit_file_name:str):
+    with open(os.path.join(path2indices, unit_file_name)) as json_file:
         unit_config = json.load(json_file)
     return unit_config
 
