@@ -225,7 +225,7 @@ simply a hard-copied version of commit 2b1b72e to avoid further commits affectin
 4. Instantiate synthetic neuron with desired setting and labels
 5. Run SAMNeuron on all candidate images and save the top 15 highest activating images and their activations
 6. Save the data in the format “path2data/label” or for multi-label neurons “path2data/label1_label2”
-7. Convert the saved data to the format expected by MAIA, demonstrated [here](generate_dataset_exemplars.ipynb)
+7. Convert the saved data to the format expected by MAIA, demonstrated [here](synthetic_neurons_dataset/create_synthetic_neurons.ipynb)
 
 ### Acknowledgment ###
 [Christy Li](https://www.linkedin.com/in/christykl/) helped with cleaning up the synthetic neurons code for release.
