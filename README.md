@@ -214,5 +214,18 @@ Finally, move the computed exemplars to the `exemplars/` folder.
 Initially Grounded Segment Anything was implemented as a git submodule. However, a commit broke synthetic neuron functionality. Therefore, it is now
 simply a hard-copied version of commit 2b1b72e to avoid further commits affecting the repository.
 
+## Creating Custom Synthetic-Neurons
+
+1. Decide the mode and label(s) for your neuron.
+    1. ex. Cheese OR Lemon
+2. Identify an object-classification dataset you want to create exemplars from. The example notebooks use COCO.
+3. Query the dataset for relevant images to your synthetic neuron
+    1. i.e. if you want to build a neuron that’s selective for dogs (monosemantic neuron), query the dataset for dog images
+    2. If you want to build a neuron that’s selective for dogs but only if they’re wearing collars (and neuron), query the dataset for dogs wearing collars
+4. Instantiate synthetic neuron with desired setting and labels
+5. Run SAMNeuron on all candidate images and save the top 15 highest activating images and their activations
+6. Save the data in the format “path2data/label” or for multi-label neurons “path2data/label1_label2”
+7. Convert the saved data to the format expected by MAIA, demonstrated [here](generate_dataset_exemplars.ipynb)
+
 ### Acknowledgment ###
 [Christy Li](https://www.linkedin.com/in/christykl/) helped with cleaning up the synthetic neurons code for release.
