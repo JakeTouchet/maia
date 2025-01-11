@@ -92,15 +92,14 @@ Class Tools:
     edit_images(self, images: Union[List[Image.Image], List[str]], prompts: List[str]) -> List[Image.Image]
         This function enables loclized testing of specific hypotheses about how
         variations on the content of a single image affect neuron activations.
-        Gets a list of input prompt and a list of corresponding editing
-        instructions, then generate images according to the input prompts and
-        edits each image based on the instructions given in the prompt using a
-        text-based image editing model. This function is very useful for testing
-        the causality of the neuron in a controlled way, for example by testing
-        how the neuron activation is affected by changing one aspect of the
-        image. IMPORTANT: Do not use negative terminology such as "remove ...",
-        try to use terminology like "replace ... with ..." or "change the color
-        of ... to ...".
+        Gets a list of images and a list of corresponding editing instructions,
+        then edits each image based on the instructions given in the prompt
+        using a text-based image editing model. This function is very useful for
+        testing the causality of the neuron in a controlled way, for example by
+        testing how the neuron activation is affected by changing one aspect of
+        the image. IMPORTANT: Do not use negative terminology such as "remove
+        ...", try to use terminology like "replace ... with ..." or "change the
+        color of ... to ...".
     text2image(prompt_list: str) -> List[str]
         Gets a list of text prompts as an input and generates an image for each
         prompt using a text to image model. The function returns a
@@ -146,11 +145,14 @@ Class Tools:
         >>>     tools.display(image, f"Activation: {activation}")
 
     def edit_images(self, images: Union[List[PIL.Image.Image], List[str]], prompts: List[str]):
-        Generate images from a list of prompts, then edits each image with the
-        corresponding editing prompt. Important note: Do not use negative
-        terminology such as "remove ...", try to use terminology like "replace
-        ... with ..." or "change the color of ... to" The function returns a
-        list of images and list of the relevant prompts.
+        Gets a list of images and a list of corresponding editing
+        instructions, then edits each image based on the instructions given in the prompt using a
+        text-based image editing model. This function is very useful for
+        testing the causality of the neuron in a controlled way, for example by
+        testing how the neuron activation is affected by changing one aspect of
+        the image. IMPORTANT: Do not use negative terminology such as "remove
+        ...", try to use terminology like "replace ... with ..." or "change the
+        color of ... to ...". The function returns a list of edited images.
         
         Parameters
         ----------

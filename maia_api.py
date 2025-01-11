@@ -50,6 +50,13 @@ class BaseSystem(ABC):
         """
         pass
 
+    @abstractmethod
+    def cleanup(self):
+        """
+        Cleans up the system.
+        """
+        pass
+
 class System(BaseSystem):
     """
     A Python class containing the vision model and the specific neuron to interact with.
@@ -152,6 +159,11 @@ class System(BaseSystem):
             masked_images.append(masked_image)
 
         return activations, masked_images
+    
+    def cleanup(self):
+        del self.model_wrapper
+        del self.unit
+        torch.cuda.empty_cache()
 
     @staticmethod
     def _spatialize_vit_mlp(hiddens: torch.Tensor) -> torch.Tensor:
@@ -229,9 +241,7 @@ class System(BaseSystem):
         prob = F.softmax(logits, dim=1)
         image_calss = torch.argmax(logits[0])
         activation = prob[0][image_calss]
-        activation = activation.item()
-        activation = round(activation, 4)
-        return activation.item(), image
+        return round(activation.item(), 4), image
 
 class SyntheticSystem(BaseSystem):
     """
@@ -323,6 +333,10 @@ class SyntheticSystem(BaseSystem):
                 masked_images_list.extend(masks_str)
 
         return activation_list,masked_images_list
+    
+    def cleanup(self):
+        pass
+
 
 class Tools:
     """
@@ -367,15 +381,14 @@ class Tools:
     edit_images(self, images: Union[List[Image.Image], List[str]], prompts: List[str]) -> List[Image.Image]
         This function enables loclized testing of specific hypotheses about how
         variations on the content of a single image affect neuron activations.
-        Gets a list of input prompt and a list of corresponding editing
-        instructions, then generate images according to the input prompts and
-        edits each image based on the instructions given in the prompt using a
-        text-based image editing model. This function is very useful for testing
-        the causality of the neuron in a controlled way, for example by testing
-        how the neuron activation is affected by changing one aspect of the
-        image. IMPORTANT: Do not use negative terminology such as "remove ...",
-        try to use terminology like "replace ... with ..." or "change the color
-        of ... to ...".
+        Gets a list of images and a list of corresponding editing instructions,
+        then edits each image based on the instructions given in the prompt
+        using a text-based image editing model. This function is very useful for
+        testing the causality of the neuron in a controlled way, for example by
+        testing how the neuron activation is affected by changing one aspect of
+        the image. IMPORTANT: Do not use negative terminology such as "remove
+        ...", try to use terminology like "replace ... with ..." or "change the
+        color of ... to ...".
     text2image(prompt_list: str) -> List[str]
         Gets a list of text prompts as an input and generates an image for each
         prompt using a text to image model. The function returns a
@@ -440,7 +453,6 @@ class Tools:
         self.device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
         self.text2image_model = self._load_text2image_model(model_name=text2image_model_name)
         self.p2p_model = self._load_pix2pix_model(model_name=self.p2p_model_name) # consider maybe adding options for other models like pix2pix zero
-        self.html_path = generate_numbered_path(os.path.join(path2save, "experiment"), ".html")
 
     def dataset_exemplars(self)->Tuple[List[float], List[str]]:
         """
@@ -470,11 +482,14 @@ class Tools:
     
     def edit_images(self, images: Union[List[Image.Image], List[str]], prompts: List[str]):
         """
-        Generate images from a list of prompts, then edits each image with the
-        corresponding editing prompt. Important note: Do not use negative
-        terminology such as "remove ...", try to use terminology like "replace
-        ... with ..." or "change the color of ... to" The function returns a
-        list of images and list of the relevant prompts.
+        Gets a list of images and a list of corresponding editing
+        instructions, then edits each image based on the instructions given in the prompt using a
+        text-based image editing model. This function is very useful for
+        testing the causality of the neuron in a controlled way, for example by
+        testing how the neuron activation is affected by changing one aspect of
+        the image. IMPORTANT: Do not use negative terminology such as "remove
+        ...", try to use terminology like "replace ... with ..." or "change the
+        color of ... to ...". The function returns a list of edited images.
 
         Parameters
         ----------
@@ -584,7 +599,7 @@ class Tools:
         history = [{'role':'system', 'content':'You are a helpful assistant who views/compares partially or fully masked images.'}]
         user_content = [{"type":"text", "text": instructions}]
         for ind,image in enumerate(image_list):
-            user_content.append(format_api_content("image_url", image))
+            user_content.append(self._process_chat_input(image))
         history.append({'role': 'user', 'content': user_content})
         description = ask_agent(self.image2text_model_name,history)
         if isinstance(description, Exception): return description
@@ -696,6 +711,7 @@ class Tools:
             else:
                 output.append(self._process_chat_input(item))
         self.agent.update_experiment_log(role='user', content=output)
+    
 
     def _display_helper(self, *args: Union[str, Image.Image]):
         '''Helper function for display to recursively handle iterable arguments.'''
@@ -706,6 +722,10 @@ class Tools:
             else:
                 output.append(self._process_chat_input(item))
         return output
+
+    def cleanup(self):
+        del self.text2image_model
+        torch.cuda.empty_cache()
 
     def _process_chat_input(self, content: Union[str, Image.Image]) -> Dict[str, str]:
         '''Processes the input content for the chatbot.
@@ -719,8 +739,12 @@ class Tools:
             return format_api_content("image_url", content)
         elif isinstance(content, Image.Image):
             return format_api_content("image_url", image2str(content))
-        else:
+        elif isinstance(content, str):
             return format_api_content("text", content)
+        elif content is None:
+            return format_api_content("text", "None")
+        else:
+            return format_api_content("text", str(content))
 
     def _load_pix2pix_model(self, model_name):
         """
@@ -785,7 +809,6 @@ class Tools:
         else:
             raise("unrecognized text to image model name")
 
-    # TODO - Remove references to images per prompt
     def _prompt2image(self, prompt, images_per_prompt=None):
         if images_per_prompt == None: 
             images_per_prompt = self.images_per_prompt
@@ -866,5 +889,5 @@ class Tools:
         html_string += '</body></html>'
 
         # Save
-        with open(self.html_path, "w") as file:
+        with open(os.path.join(self.path2save, "experiment.html"), "w") as file:
             file.write(html_string)

@@ -19,7 +19,7 @@ class InterpAgent:
                 api_prompt_name: str = "api.txt",
                 user_prompt_name: str = "user_mult.txt",
                 overload_prompt_name: str = "final.txt",
-                end_experiment_token: str = "[Difference]",
+                end_experiment_token: str = "[DESCRIPTION]",
                 max_round_count: int = 25,
                 debug=False):
         self.model_name = model_name
@@ -45,7 +45,7 @@ class InterpAgent:
         temp_agent, tools.agent = tools.agent, self
         # Experiment loop
         round_count = 0
-        while True:
+        while round_count < self.max_round_count+1:
             round_count += 1
             model_experiment = ask_agent(self.model_name, self.experiment_log)
             self.update_experiment_log(role='model', type="text", type_content=str(model_experiment))
@@ -54,12 +54,11 @@ class InterpAgent:
             if self.debug:
                 print(model_experiment)
             
+            if self.end_experiment_token in model_experiment:
+                break
             if round_count > self.max_round_count:
                 self._overload_instructions()
             else:
-                if self.end_experiment_token in model_experiment:
-                    break
-                
                 try:
                     experiment_output = experiment_env.execute_experiment(model_experiment)
                     if experiment_output != "":

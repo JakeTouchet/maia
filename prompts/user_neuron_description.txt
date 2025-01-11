@@ -81,3 +81,5 @@ neuron is selective for multiple distinct concepts. List your hypotheses in the
 format:
 [LABEL 1]: <label 1>
 [LABEL 2]: <label 2>
+
+Start your experiment by calling dataset_exemplars to form your initial hypotheses.

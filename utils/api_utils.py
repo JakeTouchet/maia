@@ -11,6 +11,7 @@ import clip
 
 from netdissect.imgviz import ImageVisualizer
 from netdissect.imgviz import ImageVisualizer
+from transformers import ViTModel, ViTImageProcessor
 
 
 class Unit(BaseModel):
@@ -32,6 +33,7 @@ class ModelInfoWrapper:
         """
         self.model_name = model_name
         self.device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
+        # TODO - Doesn't this just get overwritten by _load_model ?
         if 'dino' in model_name or 'resnet' in model_name:
             self.preprocess = self._preprocess_imagenet
         self.model = self._load_model(model_name) #if clip, the define self.preprocess
@@ -40,11 +42,11 @@ class ModelInfoWrapper:
         image_list = []
         if type(images) == list:
             for image in images:
-                image_list.append(self.preprocess(image).to(self.device))
+                image_list.append(self.preprocess(str2image(image)).to(self.device))
             batch_tensor = torch.stack(image_list)
             return batch_tensor
         else:
-            return self.preprocess(images).unsqueeze(0).to(self.device)
+            return self.preprocess(str2image(images)).unsqueeze(0).to(self.device)
 
     def _load_model(self, model_name: str):
         """
@@ -70,7 +72,8 @@ class ModelInfoWrapper:
             resnet152 = models.resnet152(weights='IMAGENET1K_V1').to(self.device)  
             model = resnet152.eval()
         elif model_name == 'dino_vits8':
-            model = torch.hub.load('facebookresearch/dino:main', 'dino_vits8').to(self.device).eval()
+            model = ViTModel.from_pretrained('facebook/dino-vits8').to(self.device).eval()
+            # self.preprocess = ViTImageProcessor.from_pretrained('facebook/dino-vits8')
         elif model_name == "clip-RN50": 
             name = 'RN50'
             full_model, preprocess = clip.load(name)
@@ -119,7 +122,9 @@ def format_api_content(type: str, input: str):
     input : strself._self._
         The input content to be converted.'''
 
-    if type == "text":
+    if input is None:
+        return {"type": "text", "text": "None"}
+    elif type == "text":
         return {"type": "text", "text": str(input)}
     elif type == "image_url":
         return {"type": "image_url", "image_url": {"url": base64_to_url(input)}}

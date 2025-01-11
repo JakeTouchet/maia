@@ -3,6 +3,7 @@ import numpy as np
 import base64
 from PIL import Image
 from collections import defaultdict
+from IPython import embed
 from typing import Dict, List
 
 
@@ -77,6 +78,8 @@ class DatasetExemplars():
         self.activations = defaultdict(lambda : defaultdict(dict))
         self.thresholds = defaultdict(lambda : defaultdict(dict))
         for model_name, layers in unit_dict.items():
+            if model_name == "synthetic":
+                continue
             for layer in layers:
                 if not all_units:
                     exemplars, activations, thresholds = self.net_dissect(model_name, layer, unit_dict[model_name][layer])
@@ -118,8 +121,11 @@ class DatasetExemplars():
         exp_path = os.path.join(self.path2exemplars, model_name, 'imagenet', layer)
         activations = np.loadtxt(os.path.join(exp_path, 'activations.csv'), delimiter=',')  # units * exemplars
         thresholds = np.loadtxt(os.path.join(exp_path, 'thresholds.csv'), delimiter=',')  # units
-        image_array = np.load(os.path.join(exp_path, 'images.npy'))
-        mask_array = np.load(os.path.join(exp_path, 'masks.npy'))
+        image_array = np.load(os.path.join(exp_path, 'images.npy')) # units * exemplars * 3 * 224 * 224 (needs to be flattened for 'last' layer)
+        mask_array = np.load(os.path.join(exp_path, 'masks.npy')) # units * exemplars * 224 * 224 (ditto)
+        if layer == "last":
+            # Squeeze out singletons
+            image_array = np.squeeze(image_array)
         
         all_masked_images = []
         
@@ -141,11 +147,15 @@ class DatasetExemplars():
                     with open(masked_path, "rb") as image_file:
                         masked_b64 = base64.b64encode(image_file.read()).decode('utf-8')
                 else:
-                    curr_mask = np.repeat(mask_array[unit, exemplar_idx], 3, axis=0)
                     curr_image = image_array[unit, exemplar_idx]
-                    inside = np.array(curr_mask > 0)
-                    outside = np.array(curr_mask == 0)
-                    masked_image = curr_image * inside + 0 * curr_image * outside
+                    if layer != "last":
+                        curr_mask = np.repeat(mask_array[unit, exemplar_idx], 3, axis=0)
+                        inside = np.array(curr_mask > 0)
+                        outside = np.array(curr_mask == 0)
+                        masked_image = curr_image * inside + 0 * curr_image * outside
+                    else:
+                        # No mask needed for last layer
+                        masked_image = curr_image
                     masked_image = Image.fromarray(np.transpose(masked_image, (1, 2, 0)).astype(np.uint8))
                     masked_image = masked_image.resize([self.im_size, self.im_size], Image.Resampling.LANCZOS)
                     masked_image.save(masked_path, format='PNG')

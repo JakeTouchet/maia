@@ -1,7 +1,9 @@
 import argparse
+import gc
 import os
 import sys
 import random
+import time
 import torch
 import openai
 from dotenv import load_dotenv
@@ -34,6 +36,7 @@ def call_argparse():
     parser.add_argument('--path2save', type=str, default='./results', help='a path to save the experiment outputs')    
     parser.add_argument('--path2prompts', type=str, default='./prompts', help='path to prompt to use')    
     parser.add_argument('--path2exemplars', type=str, default='./exemplars', help='path to net disect top 15 exemplars images')    
+    parser.add_argument('--path2indices', type=str, default='./neuron_indices', help='path to neuron indices')
     parser.add_argument('--device', type=int, default=0, help='gpu device to use (e.g. 1)')    
     parser.add_argument('--text2image', type=str, default='sd', choices=['sd','dalle'], help='name of text2image model')    
     parser.add_argument('--debug', action='store_true', help='debug mode, print dialogues to screen', default=False)
@@ -72,7 +75,7 @@ def main(args):
     
     try:
         if args.unit_config_name is not None:
-            unit_config = load_unit_config(args.unit_config_name)
+            unit_config = load_unit_config(args.path2indices, args.unit_config_name)
         else:
             unit_config = {args.model: {args.layer: args.neurons}}
 
@@ -105,65 +108,81 @@ def main(args):
         for model in unit_config.keys():
             for layer in unit_config[model].keys():
                 for neuron_num in unit_config[model][layer]:
-                    if model == "synthetic":
-                        net_dissect = SyntheticExemplars(
-                            os.path.join(args.path2exemplars, model),
-                            args.path2save,
-                            layer
-                        )
-                        with open(os.path.join('./synthetic_neurons_dataset', "labels", f'{layer}.json'), 'r') as file:
-                            synthetic_neuron_data = json.load(file)
-                            gt_label = synthetic_neuron_data[neuron_num]["label"].rsplit('_')
-                        system = SyntheticSystem(neuron_num, gt_label, layer, args.device)
-                    else:
-                        net_dissect = DatasetExemplars(
-                            args.path2exemplars,
-                            args.n_exemplars,
-                            args.path2save,
-                            unit_config
-                        )
-                        system = System(model, layer, neuron_num, net_dissect.thresholds, args.device)
-
-                    tools = Tools(
-                        path2save,
-                        args.device,
-                        maia,
-                        system,
-                        net_dissect,
-                        images_per_prompt=args.images_per_prompt,
-                        text2image_model_name=args.text2image,
-                        image2text_model_name=args.maia
-                    )
-
-                    # Run all tests with error handling
-                    test_functions = [
-                        ("test_call_neuron_single", test_call_neuron_single),
-                        ("test_call_neuron_with_edit", test_call_neuron_with_edit),
-                        ("test_dataset_exemplars", test_dataset_exemplars),
-                        ("test_edit_images_dog_cat", test_edit_images_dog_cat),
-                        ("test_edit_images_dog_actions", test_edit_images_dog_actions),
-                        ("test_text2image", test_text2image),
-                        ("test_display_single", test_display_single),
-                        ("test_display_multiple", test_display_multiple),
-                        ("test_summarize_images", test_summarize_images),
-                        ("test_describe_images", test_describe_images)
-                    ]
-                    
-                    for test_name, test_func in test_functions:
-                        try:
-                            print(f"\nRunning {test_name}...")
-                            test_func(tools, system)
-                            print(f"{test_name} completed successfully")
-                        except Exception as e:
-                            log_error(e, log_file, f"Error in test function: {test_name}")
-                            continue
-
-                    # Generate HTML report
                     try:
-                        tools.generate_html(maia.experiment_log)
-                        print("HTML generation completed successfully")
-                    except Exception as e:
-                        log_error(e, log_file, "Error in HTML generation")
+                        if model == "synthetic":
+                            net_dissect = SyntheticExemplars(
+                                os.path.join(args.path2exemplars, model),
+                                args.path2save,
+                                layer
+                            )
+                            with open(os.path.join('./synthetic_neurons_dataset', "labels", f'{layer}.json'), 'r') as file:
+                                synthetic_neuron_data = json.load(file)
+                                gt_label = synthetic_neuron_data[neuron_num]["label"].rsplit('_')
+                            system = SyntheticSystem(neuron_num, gt_label, layer, args.device)
+                        else:
+                            net_dissect = DatasetExemplars(
+                                args.path2exemplars,
+                                args.n_exemplars,
+                                args.path2save,
+                                unit_config
+                            )
+                            system = System(model, layer, neuron_num, net_dissect.thresholds, args.device)
+
+                        tools = Tools(
+                            path2save,
+                            args.device,
+                            maia,
+                            system,
+                            net_dissect,
+                            images_per_prompt=args.images_per_prompt,
+                            text2image_model_name=args.text2image,
+                            image2text_model_name=args.maia
+                        )
+
+                        print(f"Running {model} {layer} {neuron_num}")
+                        # Run all tests with error handling
+                        test_functions = [
+                            #("test_call_neuron_single", test_call_neuron_single),
+                            #("test_call_neuron_with_edit", test_call_neuron_with_edit),
+                            #("test_dataset_exemplars", test_dataset_exemplars),
+                            #("test_edit_images_dog_cat", test_edit_images_dog_cat),
+                            #("test_edit_images_dog_actions", test_edit_images_dog_actions),
+                            #("test_text2image", test_text2image),
+                            #("test_display_single", test_display_single),
+                            #("test_display_multiple", test_display_multiple),
+                            ("test_summarize_images", test_summarize_images),
+                            ("test_describe_images", test_describe_images)
+                        ]
+                        
+                        for test_name, test_func in test_functions:
+                            try:
+                                print(f"\nRunning {test_name}...")
+                                test_func(tools, system)
+                                print(f"{test_name} completed successfully")
+                            except Exception as e:
+                                log_error(e, log_file, f"Error in test function: {test_name}")
+                                continue
+                        
+                    finally:
+                        # Generate HTML report
+                        try:
+                            tools.generate_html(maia.experiment_log)
+                            print("HTML generation completed successfully")
+                        except Exception as e:
+                            log_error(e, log_file, "Error in HTML generation")
+
+                        # Cleanup
+                        print("Cleaning up...")
+                        if 'tools' in locals():
+                            tools.cleanup()
+                            del tools
+                        if 'system' in locals():
+                            system.cleanup()
+                            del system
+                        
+                        # Force garbage collection
+                        gc.collect()
+                        time.sleep(1)
     
     except Exception as e:
         if log_file:
@@ -172,7 +191,6 @@ def main(args):
             print(f"Error in main initialization (before log file creation):")
             print(traceback.format_exc())
 
-#TODO - Copy over
 def test_call_neuron_single(tools: Tools, system: System):
     """Test call_neuron with a single prompt"""
     prompt = ["a dog standing on the grass"]
@@ -248,6 +266,7 @@ def test_display_multiple(tools: Tools, system: System):
 def test_summarize_images(tools: Tools, system: System):
     """Test summarize_images functionality"""
     _, exemplars = tools.dataset_exemplars()
+    embed()
     summarization = tools.summarize_images(exemplars)
     tools.display(summarization)
 

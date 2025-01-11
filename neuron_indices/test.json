@@ -1,2 +1,5 @@
-
-{"clip-RN50": {"layer1": [34]}}
+{
+    "clip-RN50": {"layer1": [34], "layer4": [966]},
+    "resnet152": {"layer3": [487], "layer4": [0]},
+    "dino_vits8": {"blocks.7.mlp.fc1": [34], "blocks.9.mlp.fc1": [9]}
+}

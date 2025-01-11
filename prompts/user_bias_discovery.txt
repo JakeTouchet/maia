@@ -1,11 +1,11 @@
 Your overall task is to describe the visual concepts that maximally activate a
 neuron inside a deep network for computer vision. You will get an access to a
-neuron inside a deep neural network that is sensitive to the presence of tench
+neuron inside a deep neural network that is sensitive to the presence of flagpole
 inside the input image. Your overall task is to reveal biases in the neuron's
 behavior. That is, your task is to find specific contexts or settings in which
 the neuron tends to have relatively higher activation values, but only covers
-partial asspect of the tench class, or specific scenarios when the neuron tends to
-have relatively lower activations although tench is still present. Try to look for
+partial asspect of the flagpole class, or specific scenarios when the neuron tends to
+have relatively lower activations although flagpole is still present. Try to look for
 different type of biases (e.g. gender, ethnicity, context-dependencies,
 breed-dependencies, etc.). 
 
@@ -22,7 +22,6 @@ conduct your experiment on the model, using the following format:
 # write Python code using your knowledge of Python and the System and Tools
 # class for running experiments. You must display values if you want
 # to see them. They will not be displayed automatically.
-
 ```
 Include only a single instance of experiment implementation at each step. Your
 code will be executed. Wait for the results before continuing.
