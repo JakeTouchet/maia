@@ -148,7 +148,7 @@ class System(BaseSystem):
                     image = self.model_wrapper.preprocess_images(image)
                     acts, image = self._calc_class(image)    
                     activation = acts
-                    masked_image = None
+                    masked_image = image2str(image)
                 else:
                     image = self.model_wrapper.preprocess_images(image)
                     acts, masks = self._calc_activations(image)    

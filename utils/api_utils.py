@@ -180,6 +180,11 @@ def generate_masked_image(image:torch.Tensor, mask:torch.Tensor, threshold:float
 
 
 def image2str(image)->str:
+    if type(image) == str:
+        return image
+    if isinstance(image, list):
+        return [image2str(img) for img in image]
+
     buffer = BytesIO()
     image.save(buffer, format="PNG")
     buffer.seek(0)
@@ -190,6 +195,9 @@ def image2str(image)->str:
 def str2image(image_str):
     if type(image_str) == Image.Image:
         return image_str
+    if isinstance(image_str, list):
+        return [str2image(img) for img in image_str]
+
     # Converts a Base64 encoded string to an image.
     img_bytes = base64.b64decode(image_str)
     img_buffer = BytesIO(img_bytes)
