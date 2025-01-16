@@ -157,6 +157,7 @@ class System(BaseSystem):
                     masked_image = generate_masked_image(image[ind], masks[ind], self.threshold)
             activations.append(activation)
             masked_images.append(masked_image)
+        activations = [round(activation, 2) for activation in activations]
 
         return activations, masked_images
     
@@ -331,8 +332,8 @@ class SyntheticSystem(BaseSystem):
                     masks_str.append(masked_image)
                 activation_list.extend(acts)
                 masked_images_list.extend(masks_str)
-
-        return activation_list,masked_images_list
+        activations = [round(activation, 2) for activation in activation_list]
+        return activations, masked_images_list
     
     def cleanup(self):
         pass
@@ -838,7 +839,7 @@ class Tools:
         return images
 
     # TODO - Make experiment log more human friendly to view
-    def generate_html(self, experiment_log: List[Dict], name="experiment", line_length=100):
+    def generate_html(self, experiment_log: List[Dict], name="experiment", line_length=100, final=False):
         # Generates an HTML file with the experiment log.
         html_string = f'''<html>
         <head>
@@ -878,7 +879,8 @@ class Tools:
                 text = entry['content'][0]['text']
 
                 html_string += f"<pre>{text}</pre><br>"
-                html_string += f"<h2>Experiment Execution</h2>"  
+                if not final:
+                    html_string += f"<h2>Experiment Execution</h2>"  
             else:
                 for content_entry in entry['content']:
 
@@ -889,5 +891,9 @@ class Tools:
         html_string += '</body></html>'
 
         # Save
-        with open(os.path.join(self.path2save, "experiment.html"), "w") as file:
+        # First, delete the file if it exists (for some reason it won't overwrite unless this is done)
+        if os.path.exists(os.path.join(self.path2save, f"{name}.html")):
+            os.remove(os.path.join(self.path2save, f"{name}.html"))
+        # Then, write the new file
+        with open(os.path.join(self.path2save, f"{name}.html"), "w") as file:
             file.write(html_string)

@@ -5,6 +5,8 @@ import os
 from typing import TYPE_CHECKING
 from inspect import signature, getdoc
 
+from IPython import embed
+
 from utils.call_agent import ask_agent
 from utils.ExperimentEnvironment import ExperimentEnvironment
 
@@ -68,7 +70,7 @@ class InterpAgent:
                                                type="text", 
                                                type_content=f"No code to run was provided, please continue with the experiments based on your findings, or output your final {self.end_experiment_token}.")
         if save_html:
-            tools.generate_html(self.experiment_log)
+            tools.generate_html(self.experiment_log, final=True)
         
         # Restore tools to its original state
         tools.agent = temp_agent

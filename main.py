@@ -30,7 +30,6 @@ def call_argparse():
     parser.add_argument('--units', type=str2dict, default='layer4=122', help='units to interp')
     return parser.parse_args()
 
-# TODO - Synthetic and normal neurons incompatible in same config
 def main(args):
     path2save = args.path2save
     
@@ -101,10 +100,15 @@ def main(args):
 
                     maia.run_experiment(system, tools, save_html=True)
                 finally:
-                    # Save the dialogue
+                    # Save the dialogue and the final description
                     print("Saving experiment log...")
                     with open(os.path.join(path2save, "experiment_log.json"), "w") as f:
                         f.write(str(maia.experiment_log))
+                    try:
+                        with open(os.path.join(path2save, "description.txt"), "w") as f:
+                            f.write(str(maia.experiment_log[-1]['content'][0]['text']))
+                    except:
+                        print("No description found")
 
                     # Cleanup
                     print("Cleaning up...")
