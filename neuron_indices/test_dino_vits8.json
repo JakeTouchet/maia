@@ -1,0 +1,3 @@
+{
+    "dino_vits8": {"encoder.layer.7.intermediate.dense": [34, 52]}
+}
