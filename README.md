@@ -82,6 +82,12 @@ OR by loading a ```.json``` file specifying the units (see example in ```./neuro
 python main.py --unit_config_name resnset152.json
 ```
 Adding ```--debug``` to the call will print all results to the screen.
+
+To run maia using another Multi-Modal LLM like Claude, use ```--maia model_name```. Ex:
+```bash
+python main.py --maia claude-3-7-sonnet-latest  --unit_config_name resnset152.json
+``` 
+
 Refer to the documentation of ```main.py``` for more configuration options.
 
 Results are automatically saved to an html file under ```./results/``` and can be viewed in your browser by starting a local server:
