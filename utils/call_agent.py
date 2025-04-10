@@ -72,7 +72,6 @@ def ask_agent(model, history):
         try:
             # Handle Claude models
             if model.startswith('claude'):
-                selected_model = 'claude-3-5-sonnet-latest'
                 system_content = None
                 messages = []
 
