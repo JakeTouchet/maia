@@ -13,7 +13,7 @@ random.seed(0000)
 
 def call_argparse():
     parser = argparse.ArgumentParser(description='Process Arguments')	
-    parser.add_argument('--maia', type=str, default='gpt-4o', choices=['gpt-4-vision-preview','gpt-4-turbo', 'gpt-4o', 'gpt-4o-mini'], help='maia agent name')	
+    parser.add_argument('--maia', type=str, default='gpt-4o', choices=['gpt-4-vision-preview','gpt-4-turbo', 'gpt-4o', 'gpt-4o-mini', 'claude'], help='maia agent name')	
     parser.add_argument('--task', type=str, default='neuron_description', help='task to solve, default is neuron description', choices=['neuron_description', 'bias_discovery'])
     parser.add_argument('--unit_config_name', type=str, help='name of unit config file defining what units to test. Leave blank for manual definition')	
     parser.add_argument('--n_exemplars', type=int, default=15, help='number of examplars for initialization')	
